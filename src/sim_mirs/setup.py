@@ -14,8 +14,8 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='developer',
-    maintainer_email='developer@todo.todo',
-    description='TODO: Package description',
+    maintainer_email='sixkam465@yahoo.co.jp',
+    description='robot urdf package',
     license='TODO: License declaration',
     extras_require={
         'test': [
