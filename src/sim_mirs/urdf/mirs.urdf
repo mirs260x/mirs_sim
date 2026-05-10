@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<robot name="mirs">
+	<material name="green">
+		<color rgba="0.0 1.0 0.0 1.0"/>
+	</material>
+	<material name="blue">
+		<color rgba="0.0 0.0 1.0 1.0"/>
+	</material>
+	<material name="red">
+		<color rgba="1.0 0.0 0.0 1.0"/>
+	</material>
+	<link name="base_link">
+		<joint name="body_joint" type="fixed">
+			<origin xyz="-0.1 0.0 0.072" rpy="0.0 0.0 0.0"/>
+			<parent link="base_link"/>
+			<child link="body_link"/>
+		</joint>
+		<visual>
+			<geometry>
+				<cylinder length="0.6" radius="0.2"/>
+			</geometry>
+		</visual>
+	</link>
+</robot>

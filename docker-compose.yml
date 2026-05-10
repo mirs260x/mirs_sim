@@ -1,7 +1,6 @@
 services:
   reluctant:
     build: .
-    container_name: reluctant
     privileged: true
     network_mode: host
     ipc: host
@@ -14,13 +13,25 @@ services:
       - ROS_DOMAIN_ID=90
 
     volumes:
-      - ./src:/root/projects/reluctant/src
-      - /tmp/.X11-unix:/tmp/.X11-unix
-
-    devices:
-      - /dev/ttyUSB0:/dev/ttyUSB0
-      - /dev/ttyUSB1:/dev/ttyUSB1
+      - type: bind
+        source: "./src"
+        target: "/home/developer/projects/reluctant/src"
+      - type: bind
+        source: "/tmp/.X11-unix"
+        target: "/tmp/.X11-unix"
 
     stdin_open: true
     tty: true
     command: bash
+
+
+  reluctant-gpu:
+    extends: reluctant
+    profiles: ["gpu"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
