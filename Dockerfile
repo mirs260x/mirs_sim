@@ -12,10 +12,13 @@ RUN apt-get update && \
 
 ARG UID=1000
 ARG GID=1000
-ARG USERNAME=ubuntu
+ARG USERNAME=developer
 
-RUN echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME}
-RUN chmod 0440 /etc/sudoers.d/${USERNAME}
+RUN userdel -r ubuntu && \
+		groupadd -g ${GID} ${USERNAME} && \
+    useradd -m -u ${UID} -g ${GID} -s /bin/bash ${USERNAME} && \
+		echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
+		chmod 0440 /etc/sudoers.d/${USERNAME}
 
 USER ${USERNAME}
 WORKDIR /home/${USERNAME}/projects/reluctant
