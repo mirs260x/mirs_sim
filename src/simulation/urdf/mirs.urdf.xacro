@@ -62,6 +62,7 @@
 		wheel：車輪
 		origin の rpy でホイールの回転軸が Y軸方向になるように合わせている。
 		xacroのmacroで左と右の処理を同時に行っている
+		8輪あるよ
 	==============================================================-->
 	<xacro:macro name="wheel" params="prefix y_reflect x_position">
 		<link name="${prefix}_wheel">
