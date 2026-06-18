@@ -11,13 +11,14 @@ def generate_launch_description():
 
     default_world_path = os.path.join(pkg_share, 'worlds', 'building_robot.sdf')
 
+    #rviz.launch.pyを起動する
     rviz_launch = os.path.join(
             get_package_share_directory("simulation"),
             "launch",
             "rviz.launch.py"
     )
 
-    # Gazebo Sim Launch
+    # Gazebo Sim
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')
@@ -25,7 +26,7 @@ def generate_launch_description():
         launch_arguments={'gz_args': ['-r ', default_world_path]}.items()
     )
 
-    # Spawn Robot Node
+    # Spawn Robot
     spawn_robot = Node(
         package='ros_gz_sim',
         executable='create',
@@ -39,7 +40,7 @@ def generate_launch_description():
         output='screen'
     )
 
-    # Bridge between ROS 2 and Gazebo Harmonic
+    # ROS2とGazeboの間でブリッジ
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',

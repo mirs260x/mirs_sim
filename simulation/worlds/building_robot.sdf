@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version="1.10">
-	<!-- copied from https://gazebosim.org/docs/harmonic/building_robot/ -->
-	<world name="car_world">
+	<!-- copied and moded from https://gazebosim.org/docs/harmonic/building_robot/ -->
+	<world name="mirs_world">
 		<physics name="1ms" type="ignored">
 			<max_step_size>0.001</max_step_size>
 			<real_time_factor>1.0</real_time_factor>
