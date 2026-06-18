@@ -29,5 +29,5 @@ RUN echo "source /opt/ros/jazzy/setup.bash" >> /home/${USERNAME}/.bashrc && \
     echo "alias ru='rosdep update'" >> /home/${USERNAME}/.bashrc && \
     echo "alias ri='rosdep install --from-path src --ignore-src -r -y'" >> /home/${USERNAME}/.bashrc && \
     echo "alias si='source install/setup.bash'" >> /home/${USERNAME}/.bashrc
-
+	
 CMD ["bash"]

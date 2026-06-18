@@ -45,8 +45,8 @@
 			</geometry>
 		</collision>
 		<inertial>
-			<mass value=""/>
-			<inertia ixx="" ixy="" ixz="" iyy="" iyz="" izz=""/>
+			<mass value="10"/>
+			<inertia ixx="0.586" ixy="0" ixz="0" iyy="0.313" iyz="0" izz="0.786"/>
 		</inertial>
 	</link>
 
@@ -81,6 +81,10 @@
 					<cylinder length="${wheel_width}" radius="${wheel_radius}"/>
 				</geometry>
 			</collision>
+			<inertial>
+				<mass value="5.7"/>
+				<inertia ixx="0.0114" ixy="0" ixz="0" iyy="0.0979" iyz="0" izz="0.0925"/>
+			</inertial>
 		</link>
 		<joint name="${prefix}_wheel_joint" type="continuous">
 			<parent link="base_link"/>
@@ -137,7 +141,7 @@
 		<joint name="${prefix}_joint" type="fixed">
 			<parent link="base_link"/>
 			<child link="${prefix}_caster"/>
-			<origin xyz="${x_reflect*(base_length/2)} 0 ${-(wheel_radius+wheel_zgap+base_height/2)}" pry="0 0 0"/>
+			<origin xyz="${x_reflect*(base_length/2)} 0 ${-(wheel_radius+wheel_zgap+base_height/2)}" rpy="0 0 0"/>
 		</joint>
 	</xacro:macro>
 
