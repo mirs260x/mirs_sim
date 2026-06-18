@@ -1,14 +1,13 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
+from launch.substitutions import Command
 from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     pkg_share = get_package_share_directory('simulation')
-    default_robot_model_path = os.path.join(pkg_share, 'urdf', 'mirs.urdf')
+    default_robot_model_path = os.path.join(pkg_share, 'urdf', 'mirs_gazebo.urdf.xacro')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz', 'urdf.rviz')
 
     # URDF読み込み
@@ -21,13 +20,14 @@ def generate_launch_description():
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        parameters=[{'robot_description': robot_description}]
+        parameters=[{'robot_description': robot_description, 'use_sim_time': True}]
     )
 
     # Joint State Publisher 起動
     joint_state_publisher_node = Node(
         package='joint_state_publisher',
-        executable='joint_state_publisher'
+        executable='joint_state_publisher',
+        parameters=[{'use_sim_time': True}]
     )
 
     # RViz起動

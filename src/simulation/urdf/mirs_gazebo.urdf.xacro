@@ -3,7 +3,7 @@
 	<xacro:include filename="mirs.urdf.xacro"/>
 
 	<!--==============================================================
-		Gazebo link properties (Friction, contact properties)
+		Gazebo用の摩擦係数の設定
 	==============================================================-->
 	<gazebo reference="left_wheel">
 		<mu1>10.0</mu1>
@@ -23,27 +23,23 @@
 		<maxVel>1.0</maxVel>
 	</gazebo>
 
-	<gazebo reference="front_caster">
-		<mu1>0.01</mu1>
-		<mu2>0.01</mu2>
-	</gazebo>
-
-	<gazebo reference="behind_caster">
-		<mu1>0.01</mu1>
-		<mu2>0.01</mu2>
-	</gazebo>
-
 	<!--==============================================================
-		Gazebo Plugins
+		Gazeboプラグイン
 	==============================================================-->
 	<gazebo>
-		<!-- Differential Drive controller -->
+		<!-- Diff Drive controller -->
 		<plugin
 			filename="gz-sim-diff-drive-system"
 			name="gz::sim::systems::DiffDrive">
-			<left_joint>left_wheel_joint</left_joint>
-			<right_joint>right_wheel_joint</right_joint>
-			<wheel_separation>0.465</wheel_separation> <!-- base_width - wheel_width -->
+			<left_joint>left_1_wheel_joint</left_joint>
+			<left_joint>left_2_wheel_joint</left_joint>
+			<left_joint>left_3_wheel_joint</left_joint>
+			<left_joint>left_4_wheel_joint</left_joint>
+			<right_joint>right_1_wheel_joint</right_joint>
+			<right_joint>right_2_wheel_joint</right_joint>
+			<right_joint>right_3_wheel_joint</right_joint>
+			<right_joint>right_4_wheel_joint</right_joint>
+			<wheel_separation>0.465</wheel_separation>
 			<wheel_radius>0.0665</wheel_radius>
 			<odom_publish_frequency>30</odom_publish_frequency>
 			<topic>cmd_vel</topic>
@@ -63,7 +59,7 @@
 			<update_rate>30</update_rate>
 		</plugin>
 
-		<!-- Sensor system plugin (LIDAR) -->
+		<!-- Sensor system (LIDAR) -->
 		<plugin
 			filename="gz-sim-sensors-system"
 			name="gz::sim::systems::Sensors">
@@ -72,7 +68,7 @@
 	</gazebo>
 
 	<!--==============================================================
-		LIDAR sensor configuration
+		LIDARプラグイン設定
 	==============================================================-->
 	<gazebo reference="laser">
 		<sensor type="gpu_lidar" name="laser">
