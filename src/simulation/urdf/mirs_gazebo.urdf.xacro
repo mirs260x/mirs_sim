@@ -5,23 +5,25 @@
 	<!--==============================================================
 		Gazebo用の摩擦係数の設定
 	==============================================================-->
-	<gazebo reference="left_wheel">
-		<mu1>10.0</mu1>
-		<mu2>10.0</mu2>
-		<kp>1000000.0</kp>
-		<kd>100.0</kd>
-		<minDepth>0.001</minDepth>
-		<maxVel>1.0</maxVel>
-	</gazebo>
+	<xacro:macro name="wheel" params="prefix">
+		<gazebo reference="${prefix}_wheel">
+			<mu1>10.0</mu1>
+			<mu2>10.0</mu2>
+			<kp>1000000.0</kp>
+			<kd>100.0</kd>
+			<minDepth>0.001</minDepth>
+			<maxVel>1.0</maxVel>
+		</gazebo>
+	</xacro:macro>
 
-	<gazebo reference="right_wheel">
-		<mu1>10.0</mu1>
-		<mu2>10.0</mu2>
-		<kp>1000000.0</kp>
-		<kd>100.0</kd>
-		<minDepth>0.001</minDepth>
-		<maxVel>1.0</maxVel>
-	</gazebo>
+	<xacro:wheel prefix="left_1"/>
+	<xacro:wheel prefix="left_2"/>
+	<xacro:wheel prefix="left_3"/>
+	<xacro:wheel prefix="left_4"/>
+	<xacro:wheel prefix="right_1"/>
+	<xacro:wheel prefix="right_2"/>
+	<xacro:wheel prefix="right_3"/>
+	<xacro:wheel prefix="right_4"/>
 
 	<!--==============================================================
 		Gazeboプラグイン
@@ -53,8 +55,14 @@
 		<plugin
 			filename="gz-sim-joint-state-publisher-system"
 			name="gz::sim::systems::JointStatePublisher">
-			<joint_name>left_wheel_joint</joint_name>
-			<joint_name>right_wheel_joint</joint_name>
+			<joint_name>left_1_wheel_joint</joint_name>
+			<joint_name>left_2_wheel_joint</joint_name>
+			<joint_name>left_3_wheel_joint</joint_name>
+			<joint_name>left_4_wheel_joint</joint_name>
+			<joint_name>right_1_wheel_joint</joint_name>
+			<joint_name>right_2_wheel_joint</joint_name>
+			<joint_name>right_3_wheel_joint</joint_name>
+			<joint_name>right_4_wheel_joint</joint_name>
 			<topic>joint_states</topic>
 			<update_rate>30</update_rate>
 		</plugin>
