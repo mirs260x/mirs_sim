@@ -5,8 +5,6 @@
 	<xacro:property name="base_width" value="0.545"/>
 	<xacro:property name="base_height" value="0.178"/>
 
-	<xacro:property name="foot_zgap" value="0.02"/>
-
 	<xacro:property name="wheel_radius" value="0.0665"/>
 	<xacro:property name="wheel_width" value="0.08"/>
 	<xacro:property name="wheel_zgap" value="0.02"/>
@@ -65,7 +63,7 @@
 		origin の rpy でホイールの回転軸が Y軸方向になるように合わせている。
 		xacroのmacroで左と右の処理を同時に行っている
 	==============================================================-->
-	<xacro:macro name="wheel" params="prefix y_reflect">
+	<xacro:macro name="wheel" params="prefix y_reflect x_position">
 		<link name="${prefix}_wheel">
 			<visual>
 				<geometry>
@@ -87,13 +85,19 @@
 		<joint name="${prefix}_wheel_joint" type="continuous">
 			<parent link="base_link"/>
 			<child link="${prefix}_wheel"/>
-			<origin xyz="0 ${y_reflect*(base_width/2-wheel_width/2)} ${-(wheel_radius+wheel_zgap+(base_height/2))}"/>
+			<origin xyz="${x_position} ${y_reflect*(base_width/2-wheel_width/2)} ${-(wheel_radius+wheel_zgap+(base_height/2))}"/>
 			<axis xyz="0 1 0"/> 
 		</joint>
 	</xacro:macro>
 
-	<xacro:wheel prefix="left" y_reflect="1"/>
-	<xacro:wheel prefix="right" y_reflect="-1"/>
+	<xacro:wheel prefix="left_1" y_reflect="1" x_position="0.21"/>
+	<xacro:wheel prefix="left_2" y_reflect="1" x_position="0.07"/>
+	<xacro:wheel prefix="left_3" y_reflect="1" x_position="-0.07"/>
+	<xacro:wheel prefix="left_4" y_reflect="1" x_position="-0.21"/>
+	<xacro:wheel prefix="right_1" y_reflect="-1" x_position="0.21"/>
+	<xacro:wheel prefix="right_2" y_reflect="-1" x_position="0.07"/>
+	<xacro:wheel prefix="right_3" y_reflect="-1" x_position="-0.07"/>
+	<xacro:wheel prefix="right_4" y_reflect="-1" x_position="-0.21"/>
 
 	<!--==============================================================
 		laser：LIDAR のフレーム
@@ -121,36 +125,6 @@
 		<origin xyz="0 0 ${laser_zoff+base_height/2+laser_height/2}" rpy="0 0 0"/> 
 	</joint>
 
-	<!--==============================================================
-		caster: MIRSが転倒しないようするためのもの
-	==============================================================-->
-	<xacro:macro name="caster" params="prefix x_reflect">
-		<link name="${prefix}_caster">
-			<visual>
-				<geometry>
-					<sphere radius="${caster_radius}"/>
-				</geometry>
-				<material name="white"/>
-			</visual>
-			<collision>
-				<geometry>
-					<sphere radius="${caster_radius}"/>
-				</geometry>
-			</collision>
-			<inertial>
-				<mass value="0.5"/>
-				<inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
-			</inertial>
-		</link>
-		<joint name="${prefix}_joint" type="fixed">
-			<parent link="base_link"/>
-			<child link="${prefix}_caster"/>
-			<origin xyz="${x_reflect*(base_length/2)} 0 ${-(wheel_radius+wheel_zgap+base_height/2)}" rpy="0 0 0"/>
-		</joint>
-	</xacro:macro>
-
-	<xacro:caster prefix="front" x_reflect="1"/>
-	<xacro:caster prefix="behind" x_reflect="-1"/>
 
 	<!--==============================================================
 		camera：カメラ本体
