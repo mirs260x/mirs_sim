@@ -16,7 +16,7 @@ slam_toolbox:
     base_frame: base_link
     scan_topic: /scan
     mode: mapping #localization
-    
+
     debug_logging: false
     throttle_scans: 1
     transform_publish_period: 0.02 #if 0 never publishes odometry
