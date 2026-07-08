@@ -1,0 +1,574 @@
+<?xml version="1.0" ?>
+<sdf version="1.10">
+	<world name="park_world">
+		<physics name="1ms" type="ignored">
+			<max_step_size>0.001</max_step_size>
+			<real_time_factor>1.0</real_time_factor>
+		</physics>
+		<plugin
+			filename="gz-sim-physics-system"
+			name="gz::sim::systems::Physics">
+		</plugin>
+		<plugin
+			filename="gz-sim-user-commands-system"
+			name="gz::sim::systems::UserCommands">
+		</plugin>
+		<plugin
+			filename="gz-sim-scene-broadcaster-system"
+			name="gz::sim::systems::SceneBroadcaster">
+		</plugin>
+
+		<light type="directional" name="sun">
+			<cast_shadows>true</cast_shadows>
+			<pose>0 0 10 0 0 0</pose>
+			<diffuse>0.8 0.8 0.8 1</diffuse>
+			<specular>0.2 0.2 0.2 1</specular>
+			<attenuation>
+				<range>1000</range>
+				<constant>0.9</constant>
+				<linear>0.01</linear>
+				<quadratic>0.001</quadratic>
+			</attenuation>
+			<direction>-0.5 0.1 -0.9</direction>
+		</light>
+
+		<!-- Ground Plane (Grass-like color) -->
+		<model name="ground_plane">
+			<static>true</static>
+			<link name="link">
+				<collision name="collision">
+					<geometry>
+						<plane>
+							<normal>0 0 1</normal>
+						</plane>
+					</geometry>
+				</collision>
+				<visual name="visual">
+					<geometry>
+						<plane>
+							<normal>0 0 1</normal>
+							<size>100 100</size>
+						</plane>
+					</geometry>
+					<material>
+						<ambient>0.3 0.5 0.2 1</ambient>
+						<diffuse>0.3 0.5 0.2 1</diffuse>
+						<specular>0.1 0.1 0.1 1</specular>
+					</material>
+				</visual>
+			</link>
+		</model>
+
+		<!-- Walking Paths -->
+		<model name="path_x">
+			<static>true</static>
+			<pose>0 0 0.005 0 0 0</pose>
+			<link name="link">
+				<collision name="col">
+					<geometry><box><size>30 2 0.01</size></box></geometry>
+				</collision>
+				<visual name="vis">
+					<geometry><box><size>30 2 0.01</size></box></geometry>
+					<material>
+						<ambient>0.7 0.7 0.7 1</ambient>
+						<diffuse>0.7 0.7 0.7 1</diffuse>
+					</material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="path_y">
+			<static>true</static>
+			<pose>0 0 0.005 0 0 1.5708</pose>
+			<link name="link">
+				<collision name="col">
+					<geometry><box><size>30 2 0.01</size></box></geometry>
+				</collision>
+				<visual name="vis">
+					<geometry><box><size>30 2 0.01</size></box></geometry>
+					<material>
+						<ambient>0.7 0.7 0.7 1</ambient>
+						<diffuse>0.7 0.7 0.7 1</diffuse>
+					</material>
+				</visual>
+			</link>
+		</model>
+
+		<!-- Trees -->
+		<model name="tree_1">
+			<static>true</static>
+			<pose>5 3 0 0 0 0</pose>
+			<link name="link">
+				<collision name="trunk_col">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+				</collision>
+				<visual name="trunk_vis">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+					<material><ambient>0.45 0.3 0.15 1</ambient><diffuse>0.45 0.3 0.15 1</diffuse></material>
+				</visual>
+				<collision name="canopy_col">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+				</collision>
+				<visual name="canopy_vis">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+					<material><ambient>0.1 0.4 0.1 1</ambient><diffuse>0.1 0.4 0.1 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="tree_2">
+			<static>true</static>
+			<pose>5 -4 0 0 0 0</pose>
+			<link name="link">
+				<collision name="trunk_col">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+				</collision>
+				<visual name="trunk_vis">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+					<material><ambient>0.45 0.3 0.15 1</ambient><diffuse>0.45 0.3 0.15 1</diffuse></material>
+				</visual>
+				<collision name="canopy_col">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+				</collision>
+				<visual name="canopy_vis">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+					<material><ambient>0.1 0.4 0.1 1</ambient><diffuse>0.1 0.4 0.1 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="tree_3">
+			<static>true</static>
+			<pose>-3 6 0 0 0 0</pose>
+			<link name="link">
+				<collision name="trunk_col">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+				</collision>
+				<visual name="trunk_vis">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+					<material><ambient>0.45 0.3 0.15 1</ambient><diffuse>0.45 0.3 0.15 1</diffuse></material>
+				</visual>
+				<collision name="canopy_col">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+				</collision>
+				<visual name="canopy_vis">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+					<material><ambient>0.1 0.4 0.1 1</ambient><diffuse>0.1 0.4 0.1 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="tree_4">
+			<static>true</static>
+			<pose>-6 -2 0 0 0 0</pose>
+			<link name="link">
+				<collision name="trunk_col">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+				</collision>
+				<visual name="trunk_vis">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+					<material><ambient>0.45 0.3 0.15 1</ambient><diffuse>0.45 0.3 0.15 1</diffuse></material>
+				</visual>
+				<collision name="canopy_col">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+				</collision>
+				<visual name="canopy_vis">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+					<material><ambient>0.1 0.4 0.1 1</ambient><diffuse>0.1 0.4 0.1 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="tree_5">
+			<static>true</static>
+			<pose>8 -7 0 0 0 0</pose>
+			<link name="link">
+				<collision name="trunk_col">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+				</collision>
+				<visual name="trunk_vis">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+					<material><ambient>0.45 0.3 0.15 1</ambient><diffuse>0.45 0.3 0.15 1</diffuse></material>
+				</visual>
+				<collision name="canopy_col">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+				</collision>
+				<visual name="canopy_vis">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+					<material><ambient>0.1 0.4 0.1 1</ambient><diffuse>0.1 0.4 0.1 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="tree_6">
+			<static>true</static>
+			<pose>-8 5 0 0 0 0</pose>
+			<link name="link">
+				<collision name="trunk_col">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+				</collision>
+				<visual name="trunk_vis">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+					<material><ambient>0.45 0.3 0.15 1</ambient><diffuse>0.45 0.3 0.15 1</diffuse></material>
+				</visual>
+				<collision name="canopy_col">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+				</collision>
+				<visual name="canopy_vis">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+					<material><ambient>0.1 0.4 0.1 1</ambient><diffuse>0.1 0.4 0.1 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="tree_7">
+			<static>true</static>
+			<pose>12 1 0 0 0 0</pose>
+			<link name="link">
+				<collision name="trunk_col">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+				</collision>
+				<visual name="trunk_vis">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+					<material><ambient>0.45 0.3 0.15 1</ambient><diffuse>0.45 0.3 0.15 1</diffuse></material>
+				</visual>
+				<collision name="canopy_col">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+				</collision>
+				<visual name="canopy_vis">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+					<material><ambient>0.1 0.4 0.1 1</ambient><diffuse>0.1 0.4 0.1 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="tree_8">
+			<static>true</static>
+			<pose>-5 -8 0 0 0 0</pose>
+			<link name="link">
+				<collision name="trunk_col">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+				</collision>
+				<visual name="trunk_vis">
+					<pose>0 0 1.5 0 0 0</pose>
+					<geometry><cylinder><radius>0.15</radius><length>3.0</length></cylinder></geometry>
+					<material><ambient>0.45 0.3 0.15 1</ambient><diffuse>0.45 0.3 0.15 1</diffuse></material>
+				</visual>
+				<collision name="canopy_col">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+				</collision>
+				<visual name="canopy_vis">
+					<pose>0 0 3.5 0 0 0</pose>
+					<geometry><sphere><radius>1.5</radius></sphere></geometry>
+					<material><ambient>0.1 0.4 0.1 1</ambient><diffuse>0.1 0.4 0.1 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<!-- Benches -->
+		<model name="bench_1">
+			<static>true</static>
+			<pose>2 1.5 0 0 0 0</pose>
+			<link name="link">
+				<collision name="seat_col">
+					<pose>0 0 0.45 0 0 0</pose>
+					<geometry><box><size>1.5 0.4 0.05</size></box></geometry>
+				</collision>
+				<visual name="seat_vis">
+					<pose>0 0 0.45 0 0 0</pose>
+					<geometry><box><size>1.5 0.4 0.05</size></box></geometry>
+					<material><ambient>0.55 0.35 0.2 1</ambient><diffuse>0.55 0.35 0.2 1</diffuse></material>
+				</visual>
+				<collision name="leg_l_col">
+					<pose>-0.7 0 0.225 0 0 0</pose>
+					<geometry><box><size>0.1 0.4 0.45</size></box></geometry>
+				</collision>
+				<visual name="leg_l_vis">
+					<pose>-0.7 0 0.225 0 0 0</pose>
+					<geometry><box><size>0.1 0.4 0.45</size></box></geometry>
+					<material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+				</visual>
+				<collision name="leg_r_col">
+					<pose>0.7 0 0.225 0 0 0</pose>
+					<geometry><box><size>0.1 0.4 0.45</size></box></geometry>
+				</collision>
+				<visual name="leg_r_vis">
+					<pose>0.7 0 0.225 0 0 0</pose>
+					<geometry><box><size>0.1 0.4 0.45</size></box></geometry>
+					<material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="bench_2">
+			<static>true</static>
+			<pose>-2 -1.5 0 0 0 3.1415</pose>
+			<link name="link">
+				<collision name="seat_col">
+					<pose>0 0 0.45 0 0 0</pose>
+					<geometry><box><size>1.5 0.4 0.05</size></box></geometry>
+				</collision>
+				<visual name="seat_vis">
+					<pose>0 0 0.45 0 0 0</pose>
+					<geometry><box><size>1.5 0.4 0.05</size></box></geometry>
+					<material><ambient>0.55 0.35 0.2 1</ambient><diffuse>0.55 0.35 0.2 1</diffuse></material>
+				</visual>
+				<collision name="leg_l_col">
+					<pose>-0.7 0 0.225 0 0 0</pose>
+					<geometry><box><size>0.1 0.4 0.45</size></box></geometry>
+				</collision>
+				<visual name="leg_l_vis">
+					<pose>-0.7 0 0.225 0 0 0</pose>
+					<geometry><box><size>0.1 0.4 0.45</size></box></geometry>
+					<material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+				</visual>
+				<collision name="leg_r_col">
+					<pose>0.7 0 0.225 0 0 0</pose>
+					<geometry><box><size>0.1 0.4 0.45</size></box></geometry>
+				</collision>
+				<visual name="leg_r_vis">
+					<pose>0.7 0 0.225 0 0 0</pose>
+					<geometry><box><size>0.1 0.4 0.45</size></box></geometry>
+					<material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<!-- Lamp Posts -->
+		<model name="lamp_1">
+			<static>true</static>
+			<pose>3 3 0 0 0 0</pose>
+			<link name="link">
+				<collision name="pole_col">
+					<pose>0 0 1.75 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>3.5</length></cylinder></geometry>
+				</collision>
+				<visual name="pole_vis">
+					<pose>0 0 1.75 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>3.5</length></cylinder></geometry>
+					<material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.3 0.3 0.3 1</diffuse></material>
+				</visual>
+				<collision name="head_col">
+					<pose>0 0 3.65 0 0 0</pose>
+					<geometry><sphere><radius>0.15</radius></sphere></geometry>
+				</collision>
+				<visual name="head_vis">
+					<pose>0 0 3.65 0 0 0</pose>
+					<geometry><sphere><radius>0.15</radius></sphere></geometry>
+					<material><ambient>0.9 0.9 0.3 1</ambient><diffuse>0.9 0.9 0.3 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="lamp_2">
+			<static>true</static>
+			<pose>-3 -3 0 0 0 0</pose>
+			<link name="link">
+				<collision name="pole_col">
+					<pose>0 0 1.75 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>3.5</length></cylinder></geometry>
+				</collision>
+				<visual name="pole_vis">
+					<pose>0 0 1.75 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>3.5</length></cylinder></geometry>
+					<material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.3 0.3 0.3 1</diffuse></material>
+				</visual>
+				<collision name="head_col">
+					<pose>0 0 3.65 0 0 0</pose>
+					<geometry><sphere><radius>0.15</radius></sphere></geometry>
+				</collision>
+				<visual name="head_vis">
+					<pose>0 0 3.65 0 0 0</pose>
+					<geometry><sphere><radius>0.15</radius></sphere></geometry>
+					<material><ambient>0.9 0.9 0.3 1</ambient><diffuse>0.9 0.9 0.3 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<!-- Fence segments -->
+		<model name="fence_x">
+			<static>true</static>
+			<pose>-15 0 0.6 0 0 1.5708</pose>
+			<link name="link">
+				<collision name="col">
+					<geometry><box><size>30 0.1 1.2</size></box></geometry>
+				</collision>
+				<visual name="vis">
+					<geometry><box><size>30 0.1 1.2</size></box></geometry>
+					<material><ambient>0.3 0.2 0.1 1</ambient><diffuse>0.3 0.2 0.1 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="fence_y">
+			<static>true</static>
+			<pose>0 -15 0.6 0 0 0</pose>
+			<link name="link">
+				<collision name="col">
+					<geometry><box><size>30 0.1 1.2</size></box></geometry>
+				</collision>
+				<visual name="vis">
+					<geometry><box><size>30 0.1 1.2</size></box></geometry>
+					<material><ambient>0.3 0.2 0.1 1</ambient><diffuse>0.3 0.2 0.1 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<!-- Background building -->
+		<model name="building_1">
+			<static>true</static>
+			<pose>15 10 2 0 0 0</pose>
+			<link name="link">
+				<collision name="col">
+					<geometry><box><size>8 6 4</size></box></geometry>
+				</collision>
+				<visual name="vis">
+					<geometry><box><size>8 6 4</size></box></geometry>
+					<material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<!-- Playground structure -->
+		<model name="gazebo_structure">
+			<static>true</static>
+			<pose>-10 10 0 0 0 0</pose>
+			<link name="link">
+				<collision name="roof_col">
+					<pose>0 0 2.5 0 0 0</pose>
+					<geometry><box><size>3 3 0.1</size></box></geometry>
+				</collision>
+				<visual name="roof_vis">
+					<pose>0 0 2.5 0 0 0</pose>
+					<geometry><box><size>3 3 0.1</size></box></geometry>
+					<material><ambient>0.8 0.4 0.2 1</ambient><diffuse>0.8 0.4 0.2 1</diffuse></material>
+				</visual>
+				<collision name="col1">
+					<pose>-1.4 -1.4 1.25 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>2.5</length></cylinder></geometry>
+				</collision>
+				<visual name="col1_vis">
+					<pose>-1.4 -1.4 1.25 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>2.5</length></cylinder></geometry>
+					<material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+				</visual>
+				<collision name="col2">
+					<pose>1.4 -1.4 1.25 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>2.5</length></cylinder></geometry>
+				</collision>
+				<visual name="col2_vis">
+					<pose>1.4 -1.4 1.25 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>2.5</length></cylinder></geometry>
+					<material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+				</visual>
+				<collision name="col3">
+					<pose>-1.4 1.4 1.25 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>2.5</length></cylinder></geometry>
+				</collision>
+				<visual name="col3_vis">
+					<pose>-1.4 1.4 1.25 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>2.5</length></cylinder></geometry>
+					<material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+				</visual>
+				<collision name="col4">
+					<pose>1.4 1.4 1.25 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>2.5</length></cylinder></geometry>
+				</collision>
+				<visual name="col4_vis">
+					<pose>1.4 1.4 1.25 0 0 0</pose>
+					<geometry><cylinder><radius>0.05</radius><length>2.5</length></cylinder></geometry>
+					<material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="slide">
+			<static>true</static>
+			<pose>-8 7 0 0 0.5 0.785</pose>
+			<link name="link">
+				<collision name="col">
+					<pose>0 0 0.8 0 0 0</pose>
+					<geometry><box><size>2.0 0.5 0.1</size></box></geometry>
+				</collision>
+				<visual name="vis">
+					<pose>0 0 0.8 0 0 0</pose>
+					<geometry><box><size>2.0 0.5 0.1</size></box></geometry>
+					<material><ambient>0.8 0.2 0.2 1</ambient><diffuse>0.8 0.2 0.2 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<!-- Rocks and Trash can -->
+		<model name="rock_1">
+			<static>true</static>
+			<pose>1 6 0.2 0.1 0.2 0.3</pose>
+			<link name="link">
+				<collision name="col">
+					<geometry><sphere><radius>0.4</radius></sphere></geometry>
+				</collision>
+				<visual name="vis">
+					<geometry><sphere><radius>0.4</radius></sphere></geometry>
+					<material><ambient>0.5 0.5 0.5 1</ambient><diffuse>0.5 0.5 0.5 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="rock_2">
+			<static>true</static>
+			<pose>-6 -6 0.15 -0.1 0.4 0</pose>
+			<link name="link">
+				<collision name="col">
+					<geometry><sphere><radius>0.3</radius></sphere></geometry>
+				</collision>
+				<visual name="vis">
+					<geometry><sphere><radius>0.3</radius></sphere></geometry>
+					<material><ambient>0.45 0.45 0.45 1</ambient><diffuse>0.45 0.45 0.45 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+
+		<model name="trash_can">
+			<static>true</static>
+			<pose>-2 2 0.4 0 0 0</pose>
+			<link name="link">
+				<collision name="col">
+					<geometry><cylinder><radius>0.2</radius><length>0.8</length></cylinder></geometry>
+				</collision>
+				<visual name="vis">
+					<geometry><cylinder><radius>0.2</radius><length>0.8</length></cylinder></geometry>
+					<material><ambient>0.1 0.3 0.2 1</ambient><diffuse>0.1 0.3 0.2 1</diffuse></material>
+				</visual>
+			</link>
+		</model>
+	</world>
+</sdf>
