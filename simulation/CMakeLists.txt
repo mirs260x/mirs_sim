@@ -27,6 +27,7 @@ endif()
 # Install directories
 install(DIRECTORY
   launch
+	config
   rviz
   urdf
   worlds
