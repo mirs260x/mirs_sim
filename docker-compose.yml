@@ -24,7 +24,6 @@ services:
     tty: true
     command: bash
 
-
   reluctant-gpu:
     extends: reluctant
     profiles: ["gpu"]
