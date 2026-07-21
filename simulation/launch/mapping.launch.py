@@ -29,7 +29,7 @@ def generate_launch_description():
         executable='teleop_twist_keyboard',
         name='teleop',
         output='screen',
-        prefix='xterm -e',  # Open in new terminal
+        prefix='xterm -e',
         remappings=[('cmd_vel', '/cmd_vel')],
     )
 
