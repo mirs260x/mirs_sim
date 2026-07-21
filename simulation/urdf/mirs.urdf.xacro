@@ -81,7 +81,7 @@
 			</collision>
 			<inertial>
 				<mass value="1.425"/>
-				<inertia ixx="0.0114" ixy="0" ixz="0" iyy="0.0979" iyz="0" izz="0.0925"/>
+				<inertia ixx="0.00233" ixy="0" ixz="0" iyy="0.00315" iyz="0" izz="0.00233"/>
 			</inertial>
 		</link>
 		<joint name="${prefix}_wheel_joint" type="continuous">
@@ -129,88 +129,82 @@
 
 
 	<!--==============================================================
-		camera_link：ステレオカメラ本体（筐体）
+		camera_link：RealSense D435本体（筐体）
+		D435 dimensions: 90mm x 25mm x 25mm
 	==============================================================-->
 	<link name="camera_link">
 		<visual>
 			<geometry>
-				<box size="0.03 0.15 0.03"/>
+				<box size="0.09 0.025 0.025"/>
 			</geometry>
-			<material name="red"/>
+			<material name="black"/>
 		</visual>
 		<collision>
 			<geometry>
-				<box size="0.03 0.15 0.03"/>
+				<box size="0.09 0.025 0.025"/>
 			</geometry>
 		</collision>
 		<inertial>
-			<mass value="0.1"/>
-			<inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+			<mass value="0.072"/>
+			<inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
 		</inertial>
 	</link>
 	<joint name="camera_joint" type="fixed">
 		<parent link="base_link"/>
 		<child link="camera_link"/>
-		<origin xyz="0.15 0 0.13" rpy="0 0 0"/>
+		<!-- ロボット前面中央、やや高め -->
+		<origin xyz="0.19 0 0.10" rpy="0 0 0"/>
 	</joint>
 
 	<!--==============================================================
-		camera_left：左カメラフレーム（ベースラインの左側 +Y方向）
+		camera_color_frame：RGBカメラフレーム
+		D435ではカメラ中央より左側(+Y方向)15mm
 	==============================================================-->
-	<link name="camera_left">
-		<collision>
-			<geometry>
-				<box size="0.001 0.001 0.001"/>
-			</geometry>
-		</collision>
+	<link name="camera_color_frame">
 		<inertial>
-			<mass value="0.01"/>
-			<inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+			<mass value="0.001"/>
+			<inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
 		</inertial>
 	</link>
-	<joint name="camera_left_joint" type="fixed">
+	<joint name="camera_color_joint" type="fixed">
 		<parent link="camera_link"/>
-		<child link="camera_left"/>
-		<origin xyz="0 0.06 0" rpy="0 0 0"/>
+		<child link="camera_color_frame"/>
+		<origin xyz="0 0.015 0" rpy="0 0 0"/>
 	</joint>
 
 	<!--==============================================================
-		camera_left_optical：左カメラの光学フレーム（REP-103準拠）
+		camera_color_optical_frame：RGBカメラ光学フレーム（REP-103準拠）
 	==============================================================-->
-	<link name="camera_left_optical"/>
-	<joint name="camera_left_optical_joint" type="fixed">
-		<parent link="camera_left"/>
-		<child link="camera_left_optical"/>
+	<link name="camera_color_optical_frame"/>
+	<joint name="camera_color_optical_joint" type="fixed">
+		<parent link="camera_color_frame"/>
+		<child link="camera_color_optical_frame"/>
 		<origin xyz="0 0 0" rpy="-1.5707963 0 -1.5707963"/>
 	</joint>
 
 	<!--==============================================================
-		camera_right：右カメラフレーム（ベースラインの右側 -Y方向）
+		camera_depth_frame：Depthカメラフレーム
+		D435ではカメラ中央より右側(-Y方向)15mm
 	==============================================================-->
-	<link name="camera_right">
-		<collision>
-			<geometry>
-				<box size="0.001 0.001 0.001"/>
-			</geometry>
-		</collision>
+	<link name="camera_depth_frame">
 		<inertial>
-			<mass value="0.01"/>
-			<inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+			<mass value="0.001"/>
+			<inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
 		</inertial>
 	</link>
-	<joint name="camera_right_joint" type="fixed">
+	<joint name="camera_depth_joint" type="fixed">
 		<parent link="camera_link"/>
-		<child link="camera_right"/>
-		<origin xyz="0 -0.06 0" rpy="0 0 0"/>
+		<child link="camera_depth_frame"/>
+		<origin xyz="0 -0.015 0" rpy="0 0 0"/>
 	</joint>
 
 	<!--==============================================================
-		camera_right_optical：右カメラの光学フレーム（REP-103準拠）
+		camera_depth_optical_frame：Depthカメラ光学フレーム（REP-103準拠）
 	==============================================================-->
-	<link name="camera_right_optical"/>
-	<joint name="camera_right_optical_joint" type="fixed">
-		<parent link="camera_right"/>
-		<child link="camera_right_optical"/>
+	<link name="camera_depth_optical_frame"/>
+	<joint name="camera_depth_optical_joint" type="fixed">
+		<parent link="camera_depth_frame"/>
+		<child link="camera_depth_optical_frame"/>
 		<origin xyz="0 0 0" rpy="-1.5707963 0 -1.5707963"/>
 	</joint>
 </robot>

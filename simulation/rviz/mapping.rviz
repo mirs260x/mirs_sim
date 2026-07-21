@@ -127,7 +127,7 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Best Effort
+        Reliability Policy: Reliable
         Value: /rtabmap/cloud_map
       Use Fixed Frame: true
       Use rainbow: true

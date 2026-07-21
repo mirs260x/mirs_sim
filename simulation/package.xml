@@ -30,6 +30,7 @@
 	<exec_depend>rtabmap_slam</exec_depend>
 	<exec_depend>rtabmap_odom</exec_depend>
 	<exec_depend>rtabmap_viz</exec_depend>
+	<exec_depend>ros_gz_image</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

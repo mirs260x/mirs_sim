@@ -7,10 +7,10 @@
 	==============================================================-->
 	<xacro:macro name="wheel" params="prefix">
 		<gazebo reference="${prefix}_wheel">
-			<mu1>0.7</mu1>
-			<mu2>0.7</mu2>
-			<kp>100.0</kp>
-			<kd>100.0</kd>
+			<mu1>0.8</mu1>
+			<mu2>0.8</mu2>
+			<kp>1000000.0</kp>
+			<kd>10.0</kd>
 			<minDepth>0.001</minDepth>
 			<maxVel>1.0</maxVel>
 		</gazebo>
@@ -99,19 +99,27 @@
 				</range>
 			</ray>
 			<topic>scan</topic>
+			<!-- Gazebo Harmonicはモデル名プレフィックスを自動付与するため、
+			     gz_frame_idでURDFのリンク名を明示指定してTFの一致を保証する -->
+			<gz_frame_id>laser</gz_frame_id>
 		</sensor>
 	</gazebo>
 
 	<!--==============================================================
-		ステレオカメラプラグイン設定
+		RealSense D435 シミュレーション
+		- camera_color_frame : RGBカメラ (640x480, 30Hz)
+		- camera_depth_frame : Depthカメラ (640x480, 30Hz, 最大10m)
 	==============================================================-->
-	<gazebo reference="camera_left">
-		<sensor type="camera" name="camera_left">
+
+	<!-- RGB カメラ -->
+	<gazebo reference="camera_color_frame">
+		<sensor type="camera" name="camera_color">
 			<pose>0 0 0 0 0 0</pose>
 			<visualize>false</visualize>
 			<update_rate>30</update_rate>
 			<camera>
-				<horizontal_fov>1.047</horizontal_fov>
+				<!-- D435 RGB FoV: 69.4° H -->
+				<horizontal_fov>1.2112</horizontal_fov>
 				<image>
 					<width>640</width>
 					<height>480</height>
@@ -119,31 +127,39 @@
 				</image>
 				<clip>
 					<near>0.1</near>
-					<far>100</far>
+					<far>30</far>
 				</clip>
 			</camera>
-			<topic>camera/left/image_raw</topic>
+			<topic>camera/color/image_raw</topic>
+			<camera_info_topic>camera/color/camera_info</camera_info_topic>
+			<!-- gz_frame_idを光学フレーム(optical_frame)に指定して正しく座標変換を適用 -->
+			<gz_frame_id>camera_color_optical_frame</gz_frame_id>
 		</sensor>
 	</gazebo>
 
-	<gazebo reference="camera_right">
-		<sensor type="camera" name="camera_right">
+	<!-- Depth カメラ (RealSense D435 相当) -->
+	<gazebo reference="camera_depth_frame">
+		<sensor type="depth_camera" name="camera_depth">
 			<pose>0 0 0 0 0 0</pose>
 			<visualize>false</visualize>
 			<update_rate>30</update_rate>
 			<camera>
-				<horizontal_fov>1.047</horizontal_fov>
+				<!-- D435 Depth FoV: 87° H -->
+				<horizontal_fov>1.5184</horizontal_fov>
 				<image>
 					<width>640</width>
 					<height>480</height>
-					<format>R8G8B8</format>
 				</image>
 				<clip>
+					<!-- D435 depth range: 0.1m - 10m -->
 					<near>0.1</near>
-					<far>100</far>
+					<far>10.0</far>
 				</clip>
 			</camera>
-			<topic>camera/right/image_raw</topic>
+			<topic>camera/depth/image_raw</topic>
+			<camera_info_topic>camera/depth/camera_info</camera_info_topic>
+			<!-- gz_frame_idを光学フレーム(optical_frame)に指定して正しく座標変換を適用 -->
+			<gz_frame_id>camera_depth_optical_frame</gz_frame_id>
 		</sensor>
 	</gazebo>
 </robot>

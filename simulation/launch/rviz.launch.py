@@ -31,25 +31,18 @@ def generate_launch_description():
         parameters=[{'robot_description': robot_description, 'use_sim_time': True}]
     )
 
-    # Joint State Publisher 起動
-    joint_state_publisher_node = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        parameters=[{'use_sim_time': True}]
-    )
-
-    # RViz起動
+    # RViz起動 (シミュレーション時刻に同期)
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
         name='rviz2',
         output='screen',
+        parameters=[{'use_sim_time': True}],
         arguments=['-d', rviz_config],
     )
 
     return LaunchDescription([
         rviz_config_arg,
         robot_state_publisher_node,
-        joint_state_publisher_node,
         rviz_node
     ])

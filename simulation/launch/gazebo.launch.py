@@ -4,7 +4,7 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 
 def generate_launch_description():
     pkg_share = get_package_share_directory('simulation')
@@ -46,6 +46,7 @@ def generate_launch_description():
             '-y', '0.0',
             '-z', '0.1'
         ],
+        parameters=[{'use_sim_time': True}],
         output='screen'
     )
 
@@ -54,21 +55,35 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
+            # 制御・オドメトリ・センサー
             '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
             '/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry',
             '/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan',
             '/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V',
             '/joint_states@sensor_msgs/msg/JointState@gz.msgs.Model',
-            '/clock@rosgraph_msgs/msg/Clock@gz.msgs.Clock',
-            '/camera/left/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
-            '/camera/right/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
-            '/camera/left/image_raw/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
-            '/camera/right/image_raw/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo'
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            # RGBカメラ (3D SLAM用)
+            '/camera/color/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/camera/color/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            # Depthカメラ (3D SLAM用) - camera_info のみブリッジ
+            # 深度画像は ros_gz_image で別途ブリッジ
+            '/camera/depth/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
         ],
+        parameters=[{'use_sim_time': True}],
         output='screen'
     )
 
+    # Depth画像ブリッジ (ros_gz_image を使用して正確な深度値を転送)
+    depth_image_bridge = Node(
+        package='ros_gz_image',
+        executable='image_bridge',
+        arguments=['/camera/depth/image_raw'],
+        parameters=[{'use_sim_time': True}],
+        output='screen',
+    )
+
     return LaunchDescription([
+        SetParameter(name='use_sim_time', value=True),
         rviz_config_arg,
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(rviz_launch),
@@ -76,5 +91,6 @@ def generate_launch_description():
         ),
         gazebo,
         spawn_robot,
-        bridge
+        bridge,
+        depth_image_bridge,
     ])
