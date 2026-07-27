@@ -65,8 +65,7 @@ def generate_launch_description():
             # RGBカメラ (3D SLAM用)
             '/camera/color/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
             '/camera/color/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
-            # Depthカメラ (3D SLAM用) - camera_info のみブリッジ
-            # 深度画像は ros_gz_image で別途ブリッジ
+            # Depthカメラ (3D SLAM用) - ros_gz_image で処理するため parameter_bridge では除外
             '/camera/depth/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
         ],
         parameters=[{'use_sim_time': True}],

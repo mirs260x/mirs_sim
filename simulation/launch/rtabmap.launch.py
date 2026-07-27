@@ -75,9 +75,9 @@ def generate_launch_description():
           # メモリ管理
           'Mem/STMSize':                '30',
 
-
+          # 点群出力設定
           'cloud_output_voxel_size':    0.05,
-          'cloud_noise_filtering_radius': 0.0,
+          'cloud_noise_filtering_radius': 0.05,
           'cloud_noise_filtering_min_neighbors': 5
     }
 
@@ -107,7 +107,7 @@ def generate_launch_description():
         Node(
             package='rtabmap_sync', executable='rgbd_sync', output='screen',
             # Gazebo の負荷で RGB/Depth の周期が揺れるため、同期許容幅を広げる
-            parameters=[{'approx_sync': True, 'approx_sync_max_interval': 0.2, 'use_sim_time': True}],
+            parameters=[{'approx_sync': True, 'approx_sync_max_interval': 0.5, 'use_sim_time': True}],
             remappings=sync_remappings,
         ),
 
