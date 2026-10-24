@@ -54,8 +54,82 @@ def _point_cloud_assembler(name, input_topic, output_topic, circular=False):
         output='screen')
 
 
+def _rtabmap_actions(is_3d, localization, database_path, show_viz):
+    """Run RTAB-Map against the same LiDAR and odometry used in Gazebo."""
+    odometry_topic = '/odometry/filtered' if is_3d else '/odom'
+    parameters = {
+        'use_sim_time': True,
+        'frame_id': 'base_link',
+        'odom_frame_id': '',
+        'odom_frame_id_init': 'odom',
+        'map_frame_id': 'map',
+        'publish_tf': True,
+        'subscribe_odom': True,
+        'subscribe_scan_cloud': is_3d,
+        'subscribe_scan': not is_3d,
+        'subscribe_rgb': False,
+        'subscribe_depth': False,
+        'subscribe_rgbd': False,
+        'approx_sync': True,
+        'wait_for_transform': 0.5,
+        'Rtabmap/DetectionRate': '10',
+        'RGBD/LinearUpdate': '0.05',
+        'RGBD/AngularUpdate': '0.05',
+        'Reg/Strategy': '1',
+        'Reg/Force3DoF': 'true',
+        'Grid/Sensor': '0',
+        'Grid/3D': 'true' if is_3d else 'false',
+        'Grid/RangeMax': '10',
+        'database_path': database_path,
+    }
+    if is_3d:
+        parameters.update({
+            'Icp/PointToPlane': 'false',
+            'Icp/VoxelSize': '0.1',
+            'Icp/MaxCorrespondenceDistance': '0.5',
+            'Grid/NormalsSegmentation': 'false',
+            'Grid/MaxGroundHeight': '-0.12',
+            'Grid/RayTracing': 'true',
+        })
+    if localization:
+        parameters.update({
+            'Mem/IncrementalMemory': 'false',
+            'Mem/InitWMWithAllNodes': 'true',
+        })
+
+    remappings = [
+        ('scan_cloud', '/points_assembled_icp'),
+        ('scan', '/scan'),
+        ('odom', odometry_topic),
+        ('grid_map', '/map'),
+    ]
+    actions = [Node(
+        package='rtabmap_slam',
+        executable='rtabmap',
+        name='rtabmap',
+        parameters=[parameters],
+        arguments=[] if localization else ['--delete_db_on_start'],
+        remappings=remappings,
+        output='screen')]
+    if show_viz:
+        actions.append(Node(
+            package='rtabmap_viz',
+            executable='rtabmap_viz',
+            parameters=[parameters],
+            remappings=remappings,
+            output='screen'))
+    return actions
+
+
 def _launch_setup(context):
     is_3d = _enabled(context, 'enable_nodding_lidar')
+    mapping = _enabled(context, 'enable_slam')
+    navigation = _enabled(context, 'enable_nav2')
+    coverage = _enabled(context, 'enable_coverage')
+    if mapping and navigation:
+        raise RuntimeError('enable_slam and enable_nav2 cannot both be true')
+    if coverage and not navigation:
+        raise RuntimeError('enable_coverage requires enable_nav2')
     share = get_package_share_directory('simulation')
     sim_time = {'use_sim_time': True}
     world = _optional_path(
@@ -219,6 +293,65 @@ def _launch_setup(context):
                 ],
                 output='screen'))
 
+    if mapping or navigation:
+        sensor_mode = '3d' if is_3d else '2d'
+        database_path = os.path.expanduser(_optional_path(
+            context, 'database_path',
+            os.path.join(os.path.expanduser('~'), '.ros',
+                         f'mirs_gazebo_{sensor_mode}.db')))
+        if navigation and not os.path.isfile(database_path):
+            raise RuntimeError(
+                f'RTAB-Map database not found: {database_path}. '
+                f'Run slam_{sensor_mode}.launch.py first or set database_path.')
+        actions.extend(_rtabmap_actions(
+            is_3d, navigation, database_path,
+            _enabled(context, 'enable_rtabmap_viz')))
+
+    if navigation:
+        nav2_params = _optional_path(
+            context, 'nav2_params_file',
+            os.path.join(share, 'config',
+                         'nodding_nav2.yaml' if is_3d else 'nav2_params.yaml'))
+        nav2_share = get_package_share_directory('nav2_bringup')
+        actions.append(IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(nav2_share, 'launch', 'navigation_launch.py')),
+            launch_arguments={
+                'use_sim_time': 'true',
+                'autostart': 'true',
+                'params_file': nav2_params,
+            }.items()))
+        if coverage:
+            coverage_share = get_package_share_directory('coverage')
+            actions.append(IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(coverage_share, 'launch', 'production.launch.py')),
+                launch_arguments={
+                    'enable_hardware': 'false',
+                    'enable_nav2': 'false',
+                    'enable_coverage_server': 'true',
+                    'enable_ble': _value(context, 'enable_ble'),
+                    'enable_bridge': 'true',
+                    'use_rviz': 'false',
+                    'use_sim_time': 'true',
+                    'nav2_params_file': nav2_params,
+                }.items()))
+
+    if _enabled(context, 'enable_rviz'):
+        rviz_config = _optional_path(
+            context, 'rviz_config_file',
+            os.path.join(share, 'rviz',
+                         'nodding.rviz' if is_3d else 'mapping.rviz'))
+        actions.append(Node(
+            package='rviz2', executable='rviz2',
+            arguments=['-d', rviz_config],
+            parameters=[sim_time], output='screen'))
+    if _enabled(context, 'enable_teleop'):
+        actions.append(Node(
+            package='teleop_twist_keyboard',
+            executable='teleop_twist_keyboard',
+            prefix='xterm -e', output='screen'))
+
     return actions
 
 
@@ -262,5 +395,15 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_nodding_lidar', default_value='false'),
         DeclareLaunchArgument('enable_icp_odometry', default_value='false'),
         DeclareLaunchArgument('enable_ground_segmentation', default_value='false'),
+        DeclareLaunchArgument('enable_slam', default_value='false'),
+        DeclareLaunchArgument('enable_nav2', default_value='false'),
+        DeclareLaunchArgument('enable_coverage', default_value='false'),
+        DeclareLaunchArgument('enable_ble', default_value='false'),
+        DeclareLaunchArgument('enable_teleop', default_value='false'),
+        DeclareLaunchArgument('enable_rtabmap_viz', default_value='false'),
+        DeclareLaunchArgument('enable_rviz', default_value='false'),
+        DeclareLaunchArgument('database_path', default_value=''),
+        DeclareLaunchArgument('nav2_params_file', default_value=''),
+        DeclareLaunchArgument('rviz_config_file', default_value=''),
         OpaqueFunction(function=_launch_setup),
     ])
