@@ -16,7 +16,6 @@ def generate_launch_description():
             launch_arguments={
                 'enable_slam': 'false',
                 'enable_nav2': 'true',
-                'enable_coverage': 'false',
                 'enable_nodding_lidar': 'false',
                 'enable_icp_odometry': 'false',
                 'enable_ground_segmentation': 'false',

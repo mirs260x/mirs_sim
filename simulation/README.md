@@ -68,10 +68,13 @@ Gazeboを動かす際に実機用 `slam_launch.py` / `bringup_launch.py` も同�
 `coverage_3d.launch.py` は `nav_3d` と同じ RTAB-Map DB による自己位置推定、
 Nav2、OpenNav Coverage の `coverage_server`、BLE受信、
 `coverage_bridge` をまとめて
-起動します。ここではcoverageパッケージの`production.launch.py`を、
-実機ハードウェアと重複Nav2を無効にしてincludeします。BLE receiverは
-`ble_server`のlaunch API経由でcoverage側が起動します。経路生成には
-`coverage_server`からFields2Coverを使います。
+起動します。2D/3Dのcoverage入口launchがcoverageパッケージの
+`coverage.launch.py`をincludeします。実機ハードウェアとRVizの重複起動は
+無効にし、Nav2とcoverage serverには同じシミュレーション用パラメータを渡します。
+BLE receiverは`ble_server`のlaunch API経由でcoverage側が起動します。
+`/cleaning_zone`を受け取った`coverage_bridge`がNav2の
+`navigate_complete_coverage`アクションへ送信し、Fields2Coverによる経路生成と
+Nav2の経路追従につなぎます。
 SLAMを終了してDBへの書き込みを終えてから、保存したDBを指定してください。
 スマホからは実機と同じ `initial_pose` と `cleaning_zone` のJSONを送信します。
 BLEを使わずトピック送信で試すときは `enable_ble:=false` を付けます。
@@ -121,8 +124,8 @@ SLAM ではキーボード操作用の xterm を別ウィンドウで開き、
 `teleop_twist_keyboard` が `/cmd_vel` を出します。xterm が起動できない場合は
 launch 端末に表示されるエラーを確認してください。
 コンテナへは `docker compose exec -it ros bash` のように対話端末で入ります。
-共通APIの`simulation_launch.py`はSLAM/Nav2/Coverageを既定では起動しません。
-各機能の入口launchが必要な属性を上書きして実行します。
+共通APIの`simulation_launch.py`はSLAM/Nav2を既定では起動しません。
+Coverageは専用の入口launchがcoverageパッケージをincludeします。
 全モードで RTAB-Map Viz と RViz が開きます。
 画面が不要なら `enable_rtabmap_viz:=false enable_rviz:=false`、
 キーボード操作が不要なら `enable_teleop:=false` を指定します。
@@ -197,7 +200,6 @@ ros2 launch simulation nav_3d.launch.py database_path:=/home/developer/.ros/fiel
 |---|---|---|
 | `enable_slam` | `false` | RTAB-Mapで新しい地図を作る |
 | `enable_nav2` | `false` | 保存済みRTAB-Map地図で自己位置推定しNav2を起動 |
-| `enable_coverage` | `false` | Nav2にカバレッジserver/bridgeを追加（`enable_nav2`が必要） |
 | `enable_nodding_lidar` | `false` | 首振りLiDARを使う3D構成。falseは固定LiDARの2D構成 |
 | `world` | 2D: `worlds/park.sdf`、3D: `worlds/nodding_forest.sdf` | Gazebo ワールド |
 | `robot_model_file` | `urdf/mirs_gazebo.urdf.xacro` | 機体モデル。2D では固定 LiDAR、3D では首振り |
@@ -214,7 +216,7 @@ ros2 launch simulation nav_3d.launch.py database_path:=/home/developer/.ros/fiel
 | `nav2_params_file` | 2D: `config/nav2_params.yaml`、3D: `config/nodding_nav2.yaml` | Nav2 設定 |
 | `rviz_config_file` | 2D: `rviz/mapping.rviz`、3D: `rviz/nodding.rviz` | RViz 設定 |
 | `enable_gazebo`, `enable_robot`, `enable_bridge` | `true` | シミュレーション基盤 |
-| `enable_ble` | `false` | Coverage入力用BLE受信ノード |
+| `enable_ble` | coverage入口: `true` | Coverage入力用BLE受信ノード |
 | `enable_ground_segmentation` | `false` | 3D 点群の地面分類 |
 | `enable_icp_odometry` | `false` | 診断用の 3D ICP オドメトリを起動（EKFには融合しない） |
 | `icp_min_height` | `0.5` m | ICP と RTAB-Map に渡す点の、地面からの最小高さ |

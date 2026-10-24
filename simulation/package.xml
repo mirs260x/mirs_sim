@@ -35,6 +35,9 @@
 	<exec_depend>ble_server</exec_depend>
 	<exec_depend>nav2_bringup</exec_depend>
 	<exec_depend>dwb_core</exec_depend>
+	<exec_depend>opennav_coverage</exec_depend>
+	<exec_depend>opennav_coverage_navigator</exec_depend>
+	<exec_depend>opennav_coverage_bt</exec_depend>
 	<exec_depend>rtabmap_slam</exec_depend>
 	<exec_depend>rtabmap_odom</exec_depend>
 	<exec_depend>rtabmap_viz</exec_depend>

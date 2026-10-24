@@ -125,11 +125,8 @@ def _launch_setup(context):
     is_3d = _enabled(context, 'enable_nodding_lidar')
     mapping = _enabled(context, 'enable_slam')
     navigation = _enabled(context, 'enable_nav2')
-    coverage = _enabled(context, 'enable_coverage')
     if mapping and navigation:
         raise RuntimeError('enable_slam and enable_nav2 cannot both be true')
-    if coverage and not navigation:
-        raise RuntimeError('enable_coverage requires enable_nav2')
     share = get_package_share_directory('simulation')
     sim_time = {'use_sim_time': True}
     world = _optional_path(
@@ -321,21 +318,6 @@ def _launch_setup(context):
                 'autostart': 'true',
                 'params_file': nav2_params,
             }.items()))
-        if coverage:
-            coverage_share = get_package_share_directory('coverage')
-            actions.append(IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(coverage_share, 'launch', 'production.launch.py')),
-                launch_arguments={
-                    'enable_hardware': 'false',
-                    'enable_nav2': 'false',
-                    'enable_coverage_server': 'true',
-                    'enable_ble': _value(context, 'enable_ble'),
-                    'enable_bridge': 'true',
-                    'use_rviz': 'false',
-                    'use_sim_time': 'true',
-                    'nav2_params_file': nav2_params,
-                }.items()))
 
     if _enabled(context, 'enable_rviz'):
         rviz_config = _optional_path(
@@ -397,8 +379,6 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_ground_segmentation', default_value='false'),
         DeclareLaunchArgument('enable_slam', default_value='false'),
         DeclareLaunchArgument('enable_nav2', default_value='false'),
-        DeclareLaunchArgument('enable_coverage', default_value='false'),
-        DeclareLaunchArgument('enable_ble', default_value='false'),
         DeclareLaunchArgument('enable_teleop', default_value='false'),
         DeclareLaunchArgument('enable_rtabmap_viz', default_value='false'),
         DeclareLaunchArgument('enable_rviz', default_value='false'),
