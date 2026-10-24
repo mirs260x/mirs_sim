@@ -1,0 +1,229 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <world name="nodding_forest">
+    <magnetic_field>5.5645e-06 2.28758e-05 -4.23884e-05</magnetic_field>
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-magnetometer-system" name="gz::sim::systems::Magnetometer"/>
+    <light type="directional" name="sun">
+      <pose>0 0 20 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <direction>-0.4 0.2 -0.9</direction>
+    </light>
+    <model name="ground">
+      <static>true</static>
+      <link name="ground">
+        <collision name="surface"><geometry><plane><normal>0 0 1</normal><size>60 60</size></plane></geometry></collision>
+        <visual name="surface"><geometry><plane><normal>0 0 1</normal><size>60 60</size></plane></geometry>
+          <material><ambient>0.3 0.45 0.2 1</ambient><diffuse>0.3 0.45 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="tree_1">
+      <static>true</static>
+      <pose>-21 -17 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_2">
+      <static>true</static>
+      <pose>-18 -4 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_3">
+      <static>true</static>
+      <pose>-17 14 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_4">
+      <static>true</static>
+      <pose>-13 22 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_5">
+      <static>true</static>
+      <pose>-11 -20 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_6">
+      <static>true</static>
+      <pose>-9 8 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_7">
+      <static>true</static>
+      <pose>-7 -7 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_8">
+      <static>true</static>
+      <pose>-4 19 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_9">
+      <static>true</static>
+      <pose>-3 -15 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_10">
+      <static>true</static>
+      <pose>2 11 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_11">
+      <static>true</static>
+      <pose>3 -5 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_12">
+      <static>true</static>
+      <pose>5 -19 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_13">
+      <static>true</static>
+      <pose>7 20 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_14">
+      <static>true</static>
+      <pose>9 5 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_15">
+      <static>true</static>
+      <pose>12 -10 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_16">
+      <static>true</static>
+      <pose>14 16 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_17">
+      <static>true</static>
+      <pose>17 -19 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_18">
+      <static>true</static>
+      <pose>19 -2 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_19">
+      <static>true</static>
+      <pose>21 12 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="tree_20">
+      <static>true</static>
+      <pose>23 23 0 0 0 0</pose>
+      <link name="trunk">
+        <pose>0 0 1.5 0 0 0</pose>
+        <collision name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry></collision>
+        <visual name="trunk"><geometry><cylinder><radius>0.18</radius><length>3</length></cylinder></geometry>
+          <material><ambient>0.35 0.23 0.1 1</ambient><diffuse>0.35 0.23 0.1 1</diffuse></material></visual>
+      </link>
+    </model>
+  </world>
+</sdf>

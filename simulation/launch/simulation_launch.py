@@ -1,0 +1,266 @@
+"""Start the Gazebo world, robot, bridges, and simulated sensor pipeline."""
+
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction,
+    SetEnvironmentVariable,
+)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import Command, LaunchConfiguration
+from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
+
+
+def _value(context, name):
+    return LaunchConfiguration(name).perform(context)
+
+
+def _enabled(context, name):
+    return _value(context, name).lower() in ('true', '1', 'yes')
+
+
+def _optional_path(context, name, default):
+    return _value(context, name) or default
+
+
+def _base_link_height_above_ground(context):
+    """Match the base_link offset used by mirs.urdf.xacro."""
+    return 2.0 * float(_value(context, 'wheel_radius')) + 0.109
+
+
+def _point_cloud_assembler(name, input_topic, output_topic, circular=False):
+    """Assemble one nodding sweep in the robot frame using odom for motion."""
+    return Node(
+        package='rtabmap_util',
+        executable='point_cloud_assembler',
+        name=name,
+        parameters=[{'use_sim_time': True}, {
+            'assembling_time': ParameterValue(
+                LaunchConfiguration('cloud_assembling_time'), value_type=float),
+            'fixed_frame_id': 'odom',
+            'frame_id': 'base_link',
+            'wait_for_transform': 0.5,
+            'voxel_size': 0.1,
+            'qos': 1,
+            'circular_buffer': circular,
+        }],
+        remappings=[
+            ('cloud', input_topic),
+            ('assembled_cloud', output_topic),
+        ],
+        output='screen')
+
+
+def _launch_setup(context):
+    is_3d = _enabled(context, 'enable_nodding_lidar')
+    share = get_package_share_directory('simulation')
+    sim_time = {'use_sim_time': True}
+    world = _optional_path(
+        context, 'world',
+        os.path.join(share, 'worlds',
+                     'nodding_forest.sdf' if is_3d else 'park.sdf'))
+
+    ekf_config = _optional_path(
+        context, 'ekf_config_file',
+        os.path.join(share, 'config', 'nodding_ekf.yaml'))
+
+    # Keep simulation DDS traffic isolated from the real MIRS stack. The
+    # physical micro-ROS firmware uses domain 90; Gazebo uses domain 91.
+    actions = [SetEnvironmentVariable('ROS_DOMAIN_ID', '91')]
+    if _enabled(context, 'enable_gazebo'):
+        gz_share = get_package_share_directory('ros_gz_sim')
+        actions.append(IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(gz_share, 'launch', 'gz_sim.launch.py')),
+            launch_arguments={
+                'gz_args': ['-r ', world],
+            }.items()))
+
+    if _enabled(context, 'enable_robot'):
+        description = ParameterValue(
+            Command([
+                'xacro ', LaunchConfiguration('robot_model_file'),
+                ' nodding:=', 'true' if is_3d else 'false',
+                ' wheel_radius:=', LaunchConfiguration('wheel_radius'),
+                ' wheel_track:=', LaunchConfiguration('wheel_track'),
+                ' wheel_mu_longitudinal:=', LaunchConfiguration('wheel_mu_longitudinal'),
+                ' wheel_mu_lateral:=', LaunchConfiguration('wheel_mu_lateral'),
+                ' caster_mu:=', LaunchConfiguration('caster_mu'),
+            ]),
+            value_type=str)
+        actions.extend([
+            Node(
+                package='robot_state_publisher',
+                executable='robot_state_publisher',
+                parameters=[sim_time, {'robot_description': description}],
+                output='screen'),
+            Node(
+                package='ros_gz_sim',
+                executable='create',
+                arguments=[
+                    '-name', 'mirs', '-topic', 'robot_description',
+                    '-x', LaunchConfiguration('spawn_x'),
+                    '-y', LaunchConfiguration('spawn_y'),
+                    '-z', LaunchConfiguration('spawn_z'),
+                ],
+                parameters=[sim_time],
+                output='screen'),
+        ])
+
+    if _enabled(context, 'enable_bridge'):
+        # 2D publishes the fixed laser scan directly as /scan. In 3D,
+        # nodding_io republishes /scan_raw after adding the servo state.
+        actions.append(Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            parameters=[sim_time, {
+                'config_file': LaunchConfiguration('bridge_config_file'),
+            }],
+            # Keep Gazebo's raw odometry TF available only on a diagnostic
+            # topic in 3D mode; robot_localization owns odom -> base_footprint.
+            remappings=[('/tf', '/tf_gazebo')] if is_3d else [('/scan_raw', '/scan')],
+            output='screen'))
+
+    if is_3d:
+        actions.extend([
+            Node(
+                package='simulation',
+                executable='sensor_covariance_adapter',
+                parameters=[sim_time, {
+                    'wheel_linear_velocity_variance': ParameterValue(
+                        LaunchConfiguration('wheel_linear_velocity_variance'),
+                        value_type=float),
+                    'wheel_angular_velocity_variance': ParameterValue(
+                        LaunchConfiguration('wheel_angular_velocity_variance'),
+                        value_type=float),
+                    'imu_yaw_rate_variance': ParameterValue(
+                        LaunchConfiguration('imu_yaw_rate_variance'),
+                        value_type=float),
+                }],
+                output='screen'),
+            Node(
+                package='robot_localization',
+                executable='ekf_node',
+                name='ekf_filter_node_local',
+                parameters=[sim_time, ekf_config],
+                output='screen'),
+            Node(
+                package='simulation',
+                executable='nodding_io',
+                parameters=[sim_time],
+                output='screen'),
+            Node(
+                package='nodding_lidar',
+                executable='scan_to_cloud',
+                parameters=[LaunchConfiguration('cloud_config_file')],
+                output='screen'),
+        ])
+        # Both ICP odometry and RTAB-Map scan registration use stable returns
+        # above the grass. Ground classification still sees the full cloud.
+        actions.append(Node(
+            package='simulation',
+            executable='pointcloud_height_filter',
+            name='icp_height_filter',
+            parameters=[sim_time, {
+                'input_topic': '/points',
+                'output_topic': '/points_icp_filtered',
+                'min_height_above_ground': ParameterValue(
+                    LaunchConfiguration('icp_min_height'), value_type=float),
+                'base_link_height_above_ground':
+                    _base_link_height_above_ground(context),
+            }],
+            output='screen'))
+        actions.append(_point_cloud_assembler(
+            'icp_point_cloud_assembler',
+            '/points_icp_filtered', '/points_assembled_icp'))
+        if _enabled(context, 'enable_icp_odometry'):
+            # ICP odometry is diagnostic; EKF does not subscribe to its pose.
+            actions.append(Node(
+                package='rtabmap_odom',
+                executable='icp_odometry',
+                name='icp_odometry',
+                parameters=[sim_time, {
+                    'frame_id': 'base_link',
+                    'odom_frame_id': 'odom',
+                    'guess_frame_id': 'odom',
+                    'publish_tf': False,
+                    'wait_for_transform': 0.5,
+                    'scan_cloud_is_2d': False,
+                    'scan_voxel_size': 0.1,
+                    'Icp/PointToPlane': 'false',
+                    'Icp/MaxCorrespondenceDistance': '0.5',
+                    'Reg/Force3DoF': 'true',
+                    'Odom/GuessMotion': 'true',
+                }],
+                remappings=[
+                    ('scan_cloud', '/points_assembled_icp'),
+                    ('odom', '/odometry/icp'),
+                ],
+                output='screen'))
+        if _enabled(context, 'enable_ground_segmentation'):
+            # GSeg3D needs the full nodding sweep to fit ground planes. The
+            # circular window updates every incoming scan after the first sweep.
+            actions.append(_point_cloud_assembler(
+                'ground_point_cloud_assembler',
+                '/points', '/points_assembled', circular=True))
+            actions.append(Node(
+                package='ground_segmentation_ros2',
+                executable='ground_segmentation_ros2_node',
+                name='ground_segmentation',
+                parameters=[LaunchConfiguration('ground_config_file'), {
+                    'lidar_to_ground': -_base_link_height_above_ground(context),
+                }],
+                remappings=[
+                    ('/ground_segmentation/input_pointcloud', '/points_assembled'),
+                    ('/ground_segmentation/input_imu', '/imu/data_raw'),
+                ],
+                output='screen'))
+
+    return actions
+
+
+def generate_launch_description():
+    share = get_package_share_directory('simulation')
+    return LaunchDescription([
+        DeclareLaunchArgument('world', default_value=''),
+        DeclareLaunchArgument(
+            'robot_model_file',
+            default_value=os.path.join(share, 'urdf', 'mirs_gazebo.urdf.xacro')),
+        DeclareLaunchArgument(
+            'bridge_config_file',
+            default_value=os.path.join(share, 'config', 'nodding_bridge.yaml')),
+        DeclareLaunchArgument(
+            'cloud_config_file',
+            default_value=os.path.join(share, 'config', 'nodding_cloud.yaml')),
+        DeclareLaunchArgument('cloud_assembling_time', default_value='2.0'),
+        DeclareLaunchArgument(
+            'icp_min_height', default_value='0.5',
+            description='Minimum ICP point height above the simulated ground (m)'),
+        DeclareLaunchArgument('wheel_linear_velocity_variance', default_value='0.04'),
+        DeclareLaunchArgument('wheel_angular_velocity_variance', default_value='0.09'),
+        DeclareLaunchArgument('imu_yaw_rate_variance', default_value='0.01'),
+        DeclareLaunchArgument(
+            'ground_config_file',
+            default_value=os.path.join(share, 'config', 'nodding_ground.yaml')),
+        DeclareLaunchArgument(
+            'ekf_config_file',
+            default_value=os.path.join(share, 'config', 'nodding_ekf.yaml')),
+        DeclareLaunchArgument('spawn_x', default_value='0'),
+        DeclareLaunchArgument('spawn_y', default_value='0'),
+        DeclareLaunchArgument('spawn_z', default_value='0.0'),
+        DeclareLaunchArgument('wheel_radius', default_value='0.0665'),
+        DeclareLaunchArgument('wheel_track', default_value='0.465'),
+        DeclareLaunchArgument('wheel_mu_longitudinal', default_value='1.0'),
+        DeclareLaunchArgument('wheel_mu_lateral', default_value='0.2'),
+        DeclareLaunchArgument('caster_mu', default_value='0.001'),
+        DeclareLaunchArgument('enable_gazebo', default_value='true'),
+        DeclareLaunchArgument('enable_robot', default_value='true'),
+        DeclareLaunchArgument('enable_bridge', default_value='true'),
+        DeclareLaunchArgument('enable_nodding_lidar', default_value='false'),
+        DeclareLaunchArgument('enable_icp_odometry', default_value='false'),
+        DeclareLaunchArgument('enable_ground_segmentation', default_value='false'),
+        OpaqueFunction(function=_launch_setup),
+    ])

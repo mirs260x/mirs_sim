@@ -1,0 +1,17 @@
+scan_to_cloud:
+  ros__parameters:
+    use_sim_time: true
+    scan_topic: /scan
+    servo_state_topic: /servo_state
+    servo_parent_frame: servo_link
+    cloud_topic: /points
+    output_frame: base_link
+    fixed_frame: odom
+    lidar_frame: laser
+    lidar_height: 0.0325
+    # Gazebo's 10 Hz GPU LiDAR is an instantaneous snapshot.
+    default_scan_time: 0.0
+    tf_timeout: 0.5
+    tf_cache_sec: 5.0
+    stamp_is_scan_end: false
+    reverse_time_order: false

@@ -5,10 +5,11 @@
 	<!--==============================================================
 		Gazebo用の摩擦係数の設定
 	==============================================================-->
-	<xacro:macro name="wheel" params="prefix">
+	<xacro:macro name="wheel_friction" params="prefix">
 		<gazebo reference="${prefix}_wheel">
-			<mu1>0.8</mu1>
-			<mu2>0.8</mu2>
+			<mu1>${wheel_mu_longitudinal}</mu1>
+			<mu2>${wheel_mu_lateral}</mu2>
+			<fdir1>1 0 0</fdir1>
 			<kp>1000000.0</kp>
 			<kd>10.0</kd>
 			<minDepth>0.001</minDepth>
@@ -16,14 +17,16 @@
 		</gazebo>
 	</xacro:macro>
 
-	<xacro:wheel prefix="left_1"/>
-	<xacro:wheel prefix="left_2"/>
-	<xacro:wheel prefix="left_3"/>
-	<xacro:wheel prefix="left_4"/>
-	<xacro:wheel prefix="right_1"/>
-	<xacro:wheel prefix="right_2"/>
-	<xacro:wheel prefix="right_3"/>
-	<xacro:wheel prefix="right_4"/>
+	<xacro:wheel_friction prefix="left"/>
+	<xacro:wheel_friction prefix="right"/>
+	<gazebo reference="front_caster">
+		<mu1>${caster_mu}</mu1>
+		<mu2>${caster_mu}</mu2>
+	</gazebo>
+	<gazebo reference="rear_caster">
+		<mu1>${caster_mu}</mu1>
+		<mu2>${caster_mu}</mu2>
+	</gazebo>
 
 	<!--==============================================================
 		Gazeboプラグイン
@@ -33,16 +36,15 @@
 		<plugin
 			filename="gz-sim-diff-drive-system"
 			name="gz::sim::systems::DiffDrive">
-			<left_joint>left_1_wheel_joint</left_joint>
-			<left_joint>left_2_wheel_joint</left_joint>
-			<left_joint>left_3_wheel_joint</left_joint>
-			<left_joint>left_4_wheel_joint</left_joint>
-			<right_joint>right_1_wheel_joint</right_joint>
-			<right_joint>right_2_wheel_joint</right_joint>
-			<right_joint>right_3_wheel_joint</right_joint>
-			<right_joint>right_4_wheel_joint</right_joint>
-			<wheel_separation>0.465</wheel_separation>
-			<wheel_radius>0.0665</wheel_radius>
+			<left_joint>left_wheel_joint</left_joint>
+			<right_joint>right_wheel_joint</right_joint>
+			<wheel_separation>${wheel_track}</wheel_separation>
+			<wheel_radius>${wheel_radius}</wheel_radius>
+			<!-- Bound braking torque from abrupt /cmd_vel changes. -->
+			<max_linear_acceleration>0.5</max_linear_acceleration>
+			<min_linear_acceleration>-0.5</min_linear_acceleration>
+			<max_angular_acceleration>1.0</max_angular_acceleration>
+			<min_angular_acceleration>-1.0</min_angular_acceleration>
 			<odom_publish_frequency>30</odom_publish_frequency>
 			<topic>cmd_vel</topic>
 			<odom_topic>odom</odom_topic>
@@ -55,17 +57,26 @@
 		<plugin
 			filename="gz-sim-joint-state-publisher-system"
 			name="gz::sim::systems::JointStatePublisher">
-			<joint_name>left_1_wheel_joint</joint_name>
-			<joint_name>left_2_wheel_joint</joint_name>
-			<joint_name>left_3_wheel_joint</joint_name>
-			<joint_name>left_4_wheel_joint</joint_name>
-			<joint_name>right_1_wheel_joint</joint_name>
-			<joint_name>right_2_wheel_joint</joint_name>
-			<joint_name>right_3_wheel_joint</joint_name>
-			<joint_name>right_4_wheel_joint</joint_name>
+			<joint_name>left_wheel_joint</joint_name>
+			<joint_name>right_wheel_joint</joint_name>
+			<xacro:if value="$(arg nodding)">
+				<joint_name>nodding_joint</joint_name>
+			</xacro:if>
 			<topic>joint_states</topic>
 			<update_rate>30</update_rate>
 		</plugin>
+		<xacro:if value="$(arg nodding)">
+			<plugin filename="gz-sim-joint-position-controller-system"
+				name="gz::sim::systems::JointPositionController">
+				<joint_name>nodding_joint</joint_name>
+				<topic>/nodding_cmd</topic>
+				<p_gain>20</p_gain>
+				<d_gain>1</d_gain>
+				<cmd_max>10</cmd_max>
+				<cmd_min>-10</cmd_min>
+				<initial_position>-0.349066</initial_position>
+			</plugin>
+		</xacro:if>
 
 		<!-- Sensor system (LIDAR) -->
 		<plugin
@@ -82,20 +93,26 @@
 		<sensor type="gpu_lidar" name="laser">
 			<pose>0 0 0 0 0 0</pose>
 			<visualize>true</visualize>
+			<!-- RPLIDAR S1 DenseBoost numerical specs: SLAMTEC datasheet rev. 1.7; URL in README.md. -->
 			<update_rate>10</update_rate>
 			<ray>
 				<scan>
 					<horizontal>
-						<samples>360</samples>
+						<samples>920</samples>
 						<resolution>1</resolution>
 						<min_angle>-3.141592</min_angle>
 						<max_angle>3.141592</max_angle>
 					</horizontal>
+					<vertical>
+						<samples>1</samples>
+						<min_angle>0</min_angle>
+						<max_angle>0</max_angle>
+					</vertical>
 				</scan>
 				<range>
-					<min>0.15</min>
-					<max>12.0</max>
-					<resolution>0.01</resolution>
+					<min>0.1</min>
+					<max>40.0</max>
+					<resolution>0.03</resolution>
 				</range>
 			</ray>
 			<topic>scan</topic>
@@ -104,62 +121,18 @@
 			<gz_frame_id>laser</gz_frame_id>
 		</sensor>
 	</gazebo>
-
-	<!--==============================================================
-		RealSense D435 シミュレーション
-		- camera_color_frame : RGBカメラ (640x480, 30Hz)
-		- camera_depth_frame : Depthカメラ (640x480, 30Hz, 最大10m)
-	==============================================================-->
-
-	<!-- RGB カメラ -->
-	<gazebo reference="camera_color_frame">
-		<sensor type="camera" name="camera_color">
-			<pose>0 0 0 0 0 0</pose>
-			<visualize>false</visualize>
-			<update_rate>30</update_rate>
-			<camera>
-				<!-- D435 RGB FoV: 69.4° H -->
-				<horizontal_fov>1.2112</horizontal_fov>
-				<image>
-					<width>640</width>
-					<height>480</height>
-					<format>R8G8B8</format>
-				</image>
-				<clip>
-					<near>0.1</near>
-					<far>30</far>
-				</clip>
-			</camera>
-			<topic>camera/color/image_raw</topic>
-			<camera_info_topic>camera/color/camera_info</camera_info_topic>
-			<!-- gz_frame_idを光学フレーム(optical_frame)に指定して正しく座標変換を適用 -->
-			<gz_frame_id>camera_color_optical_frame</gz_frame_id>
+	<gazebo reference="imu_link">
+		<sensor name="imu" type="imu">
+			<always_on>true</always_on>
+			<update_rate>100</update_rate>
+			<topic>imu/data_raw</topic>
+			<gz_frame_id>imu_link</gz_frame_id>
 		</sensor>
-	</gazebo>
-
-	<!-- Depth カメラ (RealSense D435 相当) -->
-	<gazebo reference="camera_depth_frame">
-		<sensor type="depth_camera" name="camera_depth">
-			<pose>0 0 0 0 0 0</pose>
-			<visualize>false</visualize>
-			<update_rate>30</update_rate>
-			<camera>
-				<!-- D435 Depth FoV: 87° H -->
-				<horizontal_fov>1.5184</horizontal_fov>
-				<image>
-					<width>640</width>
-					<height>480</height>
-				</image>
-				<clip>
-					<!-- D435 depth range: 0.1m - 10m -->
-					<near>0.1</near>
-					<far>10.0</far>
-				</clip>
-			</camera>
-			<topic>camera/depth/image_raw</topic>
-			<camera_info_topic>camera/depth/camera_info</camera_info_topic>
-			<!-- gz_frame_idを光学フレーム(optical_frame)に指定して正しく座標変換を適用 -->
-			<gz_frame_id>camera_depth_optical_frame</gz_frame_id>
+		<sensor name="magnetometer" type="magnetometer">
+			<always_on>true</always_on>
+			<update_rate>17</update_rate>
+			<topic>imu/mag</topic>
+			<gz_frame_id>imu_link</gz_frame_id>
 		</sensor>
 	</gazebo>
 </robot>

@@ -99,11 +99,11 @@ controller_server:
       time_steps: 56
       model_dt: 0.05
       batch_size: 2000
-      ax_max: 3.0
-      ax_min: -3.0
+      ax_max: 0.5
+      ax_min: -0.5
       ay_max: 3.0
       ay_min: -3.0
-      az_max: 3.5
+      az_max: 1.0
       vx_std: 0.2
       vy_std: 0.2
       wz_std: 0.4
@@ -196,7 +196,7 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      robot_radius: 0.22
+      robot_radius: 0.33
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
@@ -234,7 +234,7 @@ global_costmap:
       publish_frequency: 1.0
       global_frame: map
       robot_base_frame: base_link
-      robot_radius: 0.22
+      robot_radius: 0.33
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
@@ -364,8 +364,8 @@ velocity_smoother:
     feedback: "OPEN_LOOP"
     max_velocity: [0.5, 0.0, 2.0]
     min_velocity: [-0.5, 0.0, -2.0]
-    max_accel: [2.5, 0.0, 3.2]
-    max_decel: [-2.5, 0.0, -3.2]
+    max_accel: [0.5, 0.0, 1.0]
+    max_decel: [-0.5, 0.0, -1.0]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
@@ -454,6 +454,20 @@ docking_server:
       projection_time: 5.0
       simulation_step: 0.1
       dock_collision_threshold: 0.3
+
+coverage_server:
+  ros__parameters:
+    use_sim_time: true
+    coordinates_in_cartesian_frame: true
+    robot_width: 0.5
+    operation_width: 0.35
+    min_turning_radius: 0.2
+    linear_curv_change: 200.0
+    default_allow_overlap: false
+    default_headland_type: CONSTANT
+    default_headland_width: 0.0
+    default_route_type: BOUSTROPHEDON
+    default_swath_angle_type: BRUTE_FORCE
 
 loopback_simulator:
   ros__parameters:

@@ -2,6 +2,7 @@
 <sdf version="1.10">
 	<!-- copied and moded from https://gazebosim.org/docs/harmonic/building_robot/ -->
 	<world name="mirs_world">
+		<magnetic_field>5.5645e-06 2.28758e-05 -4.23884e-05</magnetic_field>
 		<physics name="1ms" type="ignored">
 			<max_step_size>0.001</max_step_size>
 			<real_time_factor>1.0</real_time_factor>
@@ -18,6 +19,8 @@
 			filename="gz-sim-scene-broadcaster-system"
 			name="gz::sim::systems::SceneBroadcaster">
 		</plugin>
+		<plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+		<plugin filename="gz-sim-magnetometer-system" name="gz::sim::systems::Magnetometer"/>
 
 		<light type="directional" name="sun">
 			<cast_shadows>true</cast_shadows>

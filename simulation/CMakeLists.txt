@@ -27,12 +27,26 @@ endif()
 # Install directories
 install(DIRECTORY
   launch
-	config
   rviz
   urdf
   worlds
   config
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(PROGRAMS scripts/nodding_io.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME nodding_io
+)
+
+install(PROGRAMS scripts/sensor_covariance_adapter.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME sensor_covariance_adapter
+)
+
+install(PROGRAMS scripts/pointcloud_height_filter.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME pointcloud_height_filter
 )
 
 ament_package()
