@@ -41,6 +41,9 @@ ros2 launch simulation simulation_launch.py enable_nav2:=true enable_nodding_lid
 Gazebo は ROS Domain ID `91` で起動します。実機ファームウェアの Domain ID
 `90` とDDS通信を分離します。3DモードではGazeboの生TFを `/tf_gazebo` に
 退避し、EKFが `odom → base_footprint` を配信します。
+共通APIはFoxglove Bridgeも起動します。ホスト側のFoxgloveから
+`ws://localhost:8765` に接続すると、同じDomainの地図、診断、経路を表示できます。
+Bridgeを別端末で重複起動する必要はありません。
 Gazeboの外から `ros2 topic` などで確認するときは、別ターミナルで次を実行します。
 
 ```bash
@@ -78,6 +81,10 @@ Nav2の経路追従につなぎます。
 SLAMを終了してDBへの書き込みを終えてから、保存したDBを指定してください。
 スマホからは実機と同じ `initial_pose` と `cleaning_zone` のJSONを送信します。
 BLEを使わずトピック送信で試すときは `enable_ble:=false` を付けます。
+この3Dカバレッジ入口は既定で `/home/developer/ws/maps/forest_3d.db` を読み込みます。
+RTAB-Mapの初期位置は既定で地図座標の原点 `(0, 0, 0)`、姿勢 `(0, 0, 0)`
+として渡します。保存DBの最後の位置から再開したい場合は
+`rtabmap_initial_pose:=''` を指定します。
 
 BLE受信にはホストで稼働するBlueZと、コンテナからのシステムD-Busアクセスが
 必要です。`ws/container/jazzy/docker-compose.yml` は `/run/dbus` を読み取り専用で
@@ -85,9 +92,10 @@ BLE受信にはホストで稼働するBlueZと、コンテナからのシステ
 コンテナを再ビルドしてください。
 
 ```bash
-ros2 launch simulation coverage_3d.launch.py \
-  database_path:=/home/developer/ws/maps/forest_3d.db
+ros2 launch simulation coverage_3d.launch.py
 ```
+
+別の地図を使う場合は `database_path:=/path/to/map.db` で上書きできます。
 
 すでに `nav_3d.launch.py` を起動している場合は、GazeboとNav2を重複起動せず、
 別ターミナルでカバレッジ部分だけを起動できます。別ターミナルにも
@@ -107,6 +115,53 @@ ros2 launch coverage coverage.launch.py use_sim_time:=true \
 ros2 action list | rg 'navigate_complete_coverage|compute_coverage_path'
 ros2 topic echo /coverage/state
 ros2 topic echo /coverage_server/coverage_plan --once
+```
+
+カバレッジ起動時は `coverage_monitor` が `/diagnostics` にセンサーHz、
+最終受信からの実時間、TF、速度指令経路とシミュレーション速度を1秒ごとに出します。
+`coverage_bridge` は `/coverage/phase` にゴールの処理段階を、
+`/diagnostics` にゾーン占有率とNav2の受理・失敗理由を出します。
+3D起動では `/scan_raw`、`/points`、`/points_icp_filtered`、
+`/points_assembled_icp` も監視します。各センサー項目にはヘッダー時刻の重複・逆行回数、
+点群の点数、スキャンの `time_increment` と `scan_time` を表示します。
+`NON_MONOTONIC_STAMP` が最初に現れるトピックで時刻異常の発生段階を特定できます。
+Foxgloveでは `/diagnostics` を Diagnostics – Summary (ROS) に指定できます。
+RTAB-Map内部の警告も `/rosout` に転送します。
+
+### 3D点群の段階別診断
+
+Nav2・coverage・地面判別を起動せず、LiDAR経路を一段ずつ追加する場合は
+`diagnose_3d.launch.py` を使います。各段階は同時起動せず、前のlaunchを終了してから
+次を起動します。
+
+| `stage` | 追加される処理 | 確認する出力 |
+|---|---|---|
+| `scan` | Gazebo、機体、bridge、首振り状態 | `/scan_raw`、`/scan` |
+| `cloud` | EKF、スキャンの点群化 | `/odometry/filtered`、`/points` |
+| `filtered` | RTAB-Map用の高さフィルタ | `/points_icp_filtered` |
+| `assembled` | 2秒分の点群統合 | `/points_assembled_icp` |
+| `localization` | 保存済み地図に対するRTAB-Map自己位置推定 | `/localization_pose` |
+
+```bash
+colcon build --packages-select simulation coverage
+source install/setup.bash
+ros2 launch simulation diagnose_3d.launch.py stage:=scan
+```
+
+`stage:=cloud`、`stage:=filtered`、`stage:=assembled`と順に変え、
+`/diagnostics` の `coverage/topic/*` にある `repeated_stamps`、
+`backward_stamps`、`last_point_count` を比較します。最初に異常が増えた段階が
+調査対象です。`publisher_count` が2以上なら、同じノードが残っていないか
+`ros2 topic info /scan --verbose` で発行元を確認します。`stage:=localization` では
+`database_path:=/home/developer/ws/maps/forest_3d.db` を既定で使用します。
+Foxgloveを使う場合は `enable_foxglove_bridge:=true` を指定します。
+別端末から確認する場合は `ROS_DOMAIN_ID=91 ros2 topic echo /diagnostics` を実行します。
+走行中の統合結果は `stage:=assembled` の状態で別端末から次を実行し、
+`/points_assembled_icp` の時刻と点数が継続して更新されるか確認できます。
+
+```bash
+ROS_DOMAIN_ID=91 ros2 topic pub -r 5 /cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.1}, angular: {z: 0.0}}"
 ```
 
 `/cleaning_zone` は地図の `map` 座標系で閉じていない多角形を送ります。
@@ -216,9 +271,10 @@ ros2 launch simulation nav_3d.launch.py database_path:=/home/developer/.ros/fiel
 | `nav2_params_file` | 2D: `config/nav2_params.yaml`、3D: `config/nodding_nav2.yaml` | Nav2 設定 |
 | `rviz_config_file` | 2D: `rviz/mapping.rviz`、3D: `rviz/nodding.rviz` | RViz 設定 |
 | `enable_gazebo`, `enable_robot`, `enable_bridge` | `true` | シミュレーション基盤 |
+| `enable_foxglove_bridge` | `true` | Foxglove WebSocket Bridgeを起動 |
+| `foxglove_address`, `foxglove_port` | `0.0.0.0`, `8765` | Foxglove接続の待受先 |
 | `enable_ble` | coverage入口: `true` | Coverage入力用BLE受信ノード |
 | `enable_ground_segmentation` | `false` | 3D 点群の地面分類 |
-| `enable_icp_odometry` | `false` | 診断用の 3D ICP オドメトリを起動（EKFには融合しない） |
 | `icp_min_height` | `0.5` m | ICP と RTAB-Map に渡す点の、地面からの最小高さ |
 | `wheel_linear_velocity_variance` | `0.04` | 車輪速度の融合共分散 [m²/s²] |
 | `wheel_angular_velocity_variance` | `0.09` | 車輪角速度の融合共分散 [(rad/s)²] |
@@ -264,7 +320,7 @@ Navモードは既存DBの地図を読み込むため、過去の床セルを消
 両モードとも RTAB-Map が `map → odom` と `/map` を出します。2Dモードでは
 Gazebo DiffDriveが `odom → base_footprint` を出し、3DモードではEKFが車輪速度と
 IMU旋回角速度から同じTFを出します。ICPの自己位置をEKFに戻すと点群蓄積に
-循環するため、`/odometry/icp` は診断用とし、RTAB-Map の地図照合による補正を
+循環するため、RTAB-Mapの点群照合はEKFに融合せず、地図照合による補正を
 `map → odom` に分けます。3Dの点群蓄積とRTAB-Mapは
 `/odometry/filtered` を使います。EKFへ入れるGazeboの生オドメトリと
 IMUには、シミュレーション向けの共分散を付けています。RTAB-Mapは機体が

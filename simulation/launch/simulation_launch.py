@@ -1,4 +1,4 @@
-"""Start the Gazebo world, robot, bridges, and simulated sensor pipeline."""
+"""Start Gazebo, the robot, ROS/Gazebo and Foxglove bridges, and sensors."""
 
 import os
 
@@ -8,7 +8,9 @@ from launch.actions import (
     DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction,
     SetEnvironmentVariable,
 )
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import (
+    AnyLaunchDescriptionSource, PythonLaunchDescriptionSource,
+)
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -54,7 +56,8 @@ def _point_cloud_assembler(name, input_topic, output_topic, circular=False):
         output='screen')
 
 
-def _rtabmap_actions(is_3d, localization, database_path, show_viz):
+def _rtabmap_actions(is_3d, localization, database_path, show_viz,
+                     initial_pose=''):
     """Run RTAB-Map against the same LiDAR and odometry used in Gazebo."""
     odometry_topic = '/odometry/filtered' if is_3d else '/odom'
     parameters = {
@@ -73,6 +76,7 @@ def _rtabmap_actions(is_3d, localization, database_path, show_viz):
         'approx_sync': True,
         'wait_for_transform': 0.5,
         'Rtabmap/DetectionRate': '10',
+        'log_to_rosout_level': 2,
         'RGBD/LinearUpdate': '0.05',
         'RGBD/AngularUpdate': '0.05',
         'Reg/Strategy': '1',
@@ -96,6 +100,9 @@ def _rtabmap_actions(is_3d, localization, database_path, show_viz):
             'Mem/IncrementalMemory': 'false',
             'Mem/InitWMWithAllNodes': 'true',
         })
+        if initial_pose:
+            # Override the last localization pose stored in the database.
+            parameters['initial_pose'] = initial_pose
 
     remappings = [
         ('scan_cloud', '/points_assembled_icp'),
@@ -125,6 +132,17 @@ def _launch_setup(context):
     is_3d = _enabled(context, 'enable_nodding_lidar')
     mapping = _enabled(context, 'enable_slam')
     navigation = _enabled(context, 'enable_nav2')
+    diagnostic_stage = _value(context, 'diagnostic_stage')
+    stages = ('full', 'scan', 'cloud', 'filtered', 'assembled', 'localization')
+    if diagnostic_stage not in stages:
+        raise RuntimeError(f'diagnostic_stage must be one of: {", ".join(stages)}')
+    if diagnostic_stage != 'full' and (not is_3d or mapping or navigation):
+        raise RuntimeError(
+            'diagnostic_stage requires 3D LiDAR and disables SLAM and Nav2')
+
+    def stage_at_least(name):
+        return diagnostic_stage == 'full' or stages.index(diagnostic_stage) >= stages.index(name)
+
     if mapping and navigation:
         raise RuntimeError('enable_slam and enable_nav2 cannot both be true')
     share = get_package_share_directory('simulation')
@@ -141,6 +159,15 @@ def _launch_setup(context):
     # Keep simulation DDS traffic isolated from the real MIRS stack. The
     # physical micro-ROS firmware uses domain 90; Gazebo uses domain 91.
     actions = [SetEnvironmentVariable('ROS_DOMAIN_ID', '91')]
+    if _enabled(context, 'enable_foxglove_bridge'):
+        foxglove_share = get_package_share_directory('foxglove_bridge')
+        actions.append(IncludeLaunchDescription(
+            AnyLaunchDescriptionSource(os.path.join(
+                foxglove_share, 'launch', 'foxglove_bridge_launch.xml')),
+            launch_arguments={
+                'address': _value(context, 'foxglove_address'),
+                'port': _value(context, 'foxglove_port'),
+            }.items()))
     if _enabled(context, 'enable_gazebo'):
         gz_share = get_package_share_directory('ros_gz_sim')
         actions.append(IncludeLaunchDescription(
@@ -196,82 +223,62 @@ def _launch_setup(context):
             output='screen'))
 
     if is_3d:
-        actions.extend([
-            Node(
-                package='simulation',
-                executable='sensor_covariance_adapter',
-                parameters=[sim_time, {
-                    'wheel_linear_velocity_variance': ParameterValue(
-                        LaunchConfiguration('wheel_linear_velocity_variance'),
-                        value_type=float),
-                    'wheel_angular_velocity_variance': ParameterValue(
-                        LaunchConfiguration('wheel_angular_velocity_variance'),
-                        value_type=float),
-                    'imu_yaw_rate_variance': ParameterValue(
-                        LaunchConfiguration('imu_yaw_rate_variance'),
-                        value_type=float),
-                }],
-                output='screen'),
-            Node(
-                package='robot_localization',
-                executable='ekf_node',
-                name='ekf_filter_node_local',
-                parameters=[sim_time, ekf_config],
-                output='screen'),
-            Node(
-                package='simulation',
-                executable='nodding_io',
-                parameters=[sim_time],
-                output='screen'),
-            Node(
+        if stage_at_least('cloud'):
+            actions.extend([
+                Node(
+                    package='simulation',
+                    executable='sensor_covariance_adapter',
+                    parameters=[sim_time, {
+                        'wheel_linear_velocity_variance': ParameterValue(
+                            LaunchConfiguration('wheel_linear_velocity_variance'),
+                            value_type=float),
+                        'wheel_angular_velocity_variance': ParameterValue(
+                            LaunchConfiguration('wheel_angular_velocity_variance'),
+                            value_type=float),
+                        'imu_yaw_rate_variance': ParameterValue(
+                            LaunchConfiguration('imu_yaw_rate_variance'),
+                            value_type=float),
+                    }],
+                    output='screen'),
+                Node(
+                    package='robot_localization',
+                    executable='ekf_node',
+                    name='ekf_filter_node_local',
+                    parameters=[sim_time, ekf_config],
+                    output='screen'),
+            ])
+        actions.append(Node(
+            package='simulation',
+            executable='nodding_io',
+            parameters=[sim_time],
+            output='screen'))
+        if stage_at_least('cloud'):
+            actions.append(Node(
                 package='nodding_lidar',
                 executable='scan_to_cloud',
                 parameters=[LaunchConfiguration('cloud_config_file')],
-                output='screen'),
-        ])
-        # Both ICP odometry and RTAB-Map scan registration use stable returns
-        # above the grass. Ground classification still sees the full cloud.
-        actions.append(Node(
-            package='simulation',
-            executable='pointcloud_height_filter',
-            name='icp_height_filter',
-            parameters=[sim_time, {
-                'input_topic': '/points',
-                'output_topic': '/points_icp_filtered',
-                'min_height_above_ground': ParameterValue(
-                    LaunchConfiguration('icp_min_height'), value_type=float),
-                'base_link_height_above_ground':
-                    _base_link_height_above_ground(context),
-            }],
-            output='screen'))
-        actions.append(_point_cloud_assembler(
-            'icp_point_cloud_assembler',
-            '/points_icp_filtered', '/points_assembled_icp'))
-        if _enabled(context, 'enable_icp_odometry'):
-            # ICP odometry is diagnostic; EKF does not subscribe to its pose.
-            actions.append(Node(
-                package='rtabmap_odom',
-                executable='icp_odometry',
-                name='icp_odometry',
-                parameters=[sim_time, {
-                    'frame_id': 'base_link',
-                    'odom_frame_id': 'odom',
-                    'guess_frame_id': 'odom',
-                    'publish_tf': False,
-                    'wait_for_transform': 0.5,
-                    'scan_cloud_is_2d': False,
-                    'scan_voxel_size': 0.1,
-                    'Icp/PointToPlane': 'false',
-                    'Icp/MaxCorrespondenceDistance': '0.5',
-                    'Reg/Force3DoF': 'true',
-                    'Odom/GuessMotion': 'true',
-                }],
-                remappings=[
-                    ('scan_cloud', '/points_assembled_icp'),
-                    ('odom', '/odometry/icp'),
-                ],
                 output='screen'))
-        if _enabled(context, 'enable_ground_segmentation'):
+        # RTAB-Map scan registration uses stable returns above the grass.
+        # Ground classification still sees the full cloud.
+        if stage_at_least('filtered'):
+            actions.append(Node(
+                package='simulation',
+                executable='pointcloud_height_filter',
+                name='icp_height_filter',
+                parameters=[sim_time, {
+                    'input_topic': '/points',
+                    'output_topic': '/points_icp_filtered',
+                    'min_height_above_ground': ParameterValue(
+                        LaunchConfiguration('icp_min_height'), value_type=float),
+                    'base_link_height_above_ground':
+                        _base_link_height_above_ground(context),
+                }],
+                output='screen'))
+        if stage_at_least('assembled'):
+            actions.append(_point_cloud_assembler(
+                'icp_point_cloud_assembler',
+                '/points_icp_filtered', '/points_assembled_icp'))
+        if diagnostic_stage == 'full' and _enabled(context, 'enable_ground_segmentation'):
             # GSeg3D needs the full nodding sweep to fit ground planes. The
             # circular window updates every incoming scan after the first sweep.
             actions.append(_point_cloud_assembler(
@@ -290,19 +297,21 @@ def _launch_setup(context):
                 ],
                 output='screen'))
 
-    if mapping or navigation:
+    localization_debug = diagnostic_stage == 'localization'
+    if mapping or navigation or localization_debug:
         sensor_mode = '3d' if is_3d else '2d'
         database_path = os.path.expanduser(_optional_path(
             context, 'database_path',
             os.path.join(os.path.expanduser('~'), '.ros',
                          f'mirs_gazebo_{sensor_mode}.db')))
-        if navigation and not os.path.isfile(database_path):
+        if (navigation or localization_debug) and not os.path.isfile(database_path):
             raise RuntimeError(
                 f'RTAB-Map database not found: {database_path}. '
                 f'Run slam_{sensor_mode}.launch.py first or set database_path.')
         actions.extend(_rtabmap_actions(
-            is_3d, navigation, database_path,
-            _enabled(context, 'enable_rtabmap_viz')))
+            is_3d, navigation or localization_debug, database_path,
+            _enabled(context, 'enable_rtabmap_viz'),
+            _value(context, 'rtabmap_initial_pose')))
 
     if navigation:
         nav2_params = _optional_path(
@@ -374,8 +383,11 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_gazebo', default_value='true'),
         DeclareLaunchArgument('enable_robot', default_value='true'),
         DeclareLaunchArgument('enable_bridge', default_value='true'),
+        DeclareLaunchArgument('enable_foxglove_bridge', default_value='true'),
+        DeclareLaunchArgument('foxglove_address', default_value='0.0.0.0'),
+        DeclareLaunchArgument('foxglove_port', default_value='8765'),
         DeclareLaunchArgument('enable_nodding_lidar', default_value='false'),
-        DeclareLaunchArgument('enable_icp_odometry', default_value='false'),
+        DeclareLaunchArgument('diagnostic_stage', default_value='full'),
         DeclareLaunchArgument('enable_ground_segmentation', default_value='false'),
         DeclareLaunchArgument('enable_slam', default_value='false'),
         DeclareLaunchArgument('enable_nav2', default_value='false'),
@@ -383,6 +395,7 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_rtabmap_viz', default_value='false'),
         DeclareLaunchArgument('enable_rviz', default_value='false'),
         DeclareLaunchArgument('database_path', default_value=''),
+        DeclareLaunchArgument('rtabmap_initial_pose', default_value=''),
         DeclareLaunchArgument('nav2_params_file', default_value=''),
         DeclareLaunchArgument('rviz_config_file', default_value=''),
         OpaqueFunction(function=_launch_setup),

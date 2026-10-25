@@ -17,7 +17,6 @@ def generate_launch_description():
                 'enable_slam': 'true',
                 'enable_nav2': 'false',
                 'enable_nodding_lidar': 'true',
-                'enable_icp_odometry': 'true',
                 'enable_ground_segmentation': 'true',
                 'enable_teleop': 'true',
                 'enable_rtabmap_viz': 'true',
