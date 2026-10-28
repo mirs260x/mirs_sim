@@ -318,6 +318,16 @@ def _launch_setup(context):
             context, 'nav2_params_file',
             os.path.join(share, 'config',
                          'nodding_nav2.yaml' if is_3d else 'nav2_params.yaml'))
+        actions.append(Node(
+            package='simulation',
+            executable='home_pose_saver',
+            name='home_pose_saver',
+            parameters=[sim_time, {
+                'global_frame': 'map',
+                'robot_frame': 'base_footprint',
+                'home_pose_topic': '/simulation/home_pose',
+            }],
+            output='screen'))
         nav2_share = get_package_share_directory('nav2_bringup')
         actions.append(IncludeLaunchDescription(
             PythonLaunchDescriptionSource(

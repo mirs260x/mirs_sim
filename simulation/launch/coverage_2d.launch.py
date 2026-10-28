@@ -10,6 +10,9 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     nav2_params = PathJoinSubstitution([
         FindPackageShare('simulation'), 'config', 'nav2_params.yaml'])
+    behavior_tree = PathJoinSubstitution([
+        FindPackageShare('simulation'), 'behavior_trees',
+        'navigate_coverage_return_home.xml'])
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value=''),
         DeclareLaunchArgument('database_path', default_value=''),
@@ -39,6 +42,7 @@ def generate_launch_description():
             launch_arguments={
                 'enable_mirs': 'false',
                 'enable_coverage_server': 'true',
+                'behavior_tree': behavior_tree,
                 'enable_ble': LaunchConfiguration('enable_ble'),
                 'enable_monitor': LaunchConfiguration('enable_monitor'),
                 'use_rviz': 'false',
