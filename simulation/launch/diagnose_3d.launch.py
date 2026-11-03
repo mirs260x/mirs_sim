@@ -1,4 +1,4 @@
-"""Run one 3D sensor pipeline stage without Nav2 or coverage."""
+"""3Dセンサの処理を指定した段階まで起動する。Nav2と清掃範囲走行は起動しない。"""
 
 from launch import LaunchDescription
 from launch.actions import (

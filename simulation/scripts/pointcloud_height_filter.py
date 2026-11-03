@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keep points at least a configured height above the ground estimate."""
+"""推定した地面から、設定した高さ以上にある点だけを取り出す。"""
 
 import math
 import struct

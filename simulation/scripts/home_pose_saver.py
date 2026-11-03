@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Latch the robot's spawn pose after simulated localization settles.
+"""シミュレーションの位置推定が安定してから、機体の初期位置と向きを保存する。
 
-The coverage BT waits for this recorder before starting motion. External
-navigation goals and manual commands must wait for capture as well.
+清掃走行のBehavior Treeは、この保存処理が完了してから走行を開始する。
+ほかの走行目標や手動操作も、保存が完了するまで待つ必要がある。
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from tf2_ros import Buffer, TransformException, TransformListener
 
 
 class HomePoseSaver(Node):
-    """Capture a stationary, stable map pose once and serve it to late readers."""
+    """機体が静止し、地図上の位置が安定した時点の姿勢を一度だけ保存する。後から接続した購読側にも配信する。"""
 
     MAX_TF_AGE_SEC = 0.5
     FUTURE_TF_TOLERANCE_SEC = 0.5  # Allow localization TF publication tolerance.
@@ -72,7 +72,7 @@ class HomePoseSaver(Node):
             f'home pose topic is {topic}. Wait for capture before sending external motion commands.')
 
     def _lookup_fresh(self, target: str, source: str, now_ns: int):
-        """Return a current transform without waiting inside the executor callback."""
+        """コールバック内で待機せずに、現在取得できる座標変換を返す。"""
         try:
             transform = self._tf_buffer.lookup_transform(target, source, Time())
         except TransformException:

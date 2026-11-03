@@ -9,6 +9,8 @@ ground_segmentation:
     maxZ: 2.0
     minZ: -1.0
     downsample: false
+    # GSeg3D reads this even when downsampling is disabled.
+    downsample_resolution: 0.1
     # /points is expressed in base_link, whose origin is 0.242 m above ground
     # with the default wheel and chassis dimensions in mirs.urdf.xacro.
     lidar_to_ground: -0.242

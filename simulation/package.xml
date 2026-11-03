@@ -24,6 +24,10 @@
 	<exec_depend>foxglove_bridge</exec_depend>
 	<exec_depend>rclpy</exec_depend>
 	<depend>rclcpp</depend>
+	<build_depend>libpcl-all-dev</build_depend>
+	<depend>pcl_conversions</depend>
+	<build_depend>sensor_msgs</build_depend>
+	<build_depend>tf2_ros</build_depend>
 	<depend>geometry_msgs</depend>
 	<depend>behaviortree_cpp</depend>
 	<exec_depend>sensor_msgs</exec_depend>
@@ -43,6 +47,7 @@
 	<exec_depend>opennav_coverage_navigator</exec_depend>
 	<exec_depend>opennav_coverage_bt</exec_depend>
 	<exec_depend>rtabmap_slam</exec_depend>
+	<exec_depend>glim_ros</exec_depend>
 	<exec_depend>rtabmap_odom</exec_depend>
 	<exec_depend>rtabmap_viz</exec_depend>
 	<exec_depend>rtabmap_util</exec_depend>

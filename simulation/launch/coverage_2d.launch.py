@@ -1,4 +1,4 @@
-"""Start 2D localization, Nav2, and coverage with BLE in Gazebo."""
+"""Gazeboで2D地図による位置推定、Nav2、BLE入力付きの清掃範囲走行を起動する。"""
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription

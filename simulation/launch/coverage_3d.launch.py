@@ -1,4 +1,4 @@
-"""Start 3D localization, Nav2, and coverage with BLE in Gazebo."""
+"""Gazeboで3D地図による位置推定、Nav2、BLE入力付きの清掃範囲走行を起動する。"""
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
@@ -15,6 +15,9 @@ def generate_launch_description():
         'navigate_coverage_return_home.xml'])
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value=''),
+        DeclareLaunchArgument('ground_method', default_value='gseg3d'),
+        DeclareLaunchArgument('linefit_config_file', default_value=PathJoinSubstitution([
+            FindPackageShare('simulation'), 'config', 'linefit_ground.yaml'])),
         DeclareLaunchArgument(
             'database_path',
             default_value='/home/developer/ws/maps/forest_3d.db'),
@@ -29,6 +32,8 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(PathJoinSubstitution([
                 FindPackageShare('simulation'), 'launch', 'simulation_launch.py'])),
             launch_arguments={
+                'ground_method': LaunchConfiguration('ground_method'),
+                'linefit_config_file': LaunchConfiguration('linefit_config_file'),
                 'enable_slam': 'false',
                 'enable_nav2': 'true',
                 'enable_nodding_lidar': 'true',

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Drive the Gazebo nodding joint and expose its measured state to nodding_lidar."""
+"""Gazeboの首振り関節を動かし、計測した関節の状態をnodding_lidarへ渡す。"""
 
 import math
 
@@ -13,7 +13,7 @@ from std_msgs.msg import Float64
 class NoddingIO(Node):
     def __init__(self):
         super().__init__('nodding_io')
-        self.declare_parameter('amplitude_deg', 20.0)
+        self.declare_parameter('amplitude_deg', 10.0)
         self.declare_parameter('period_sec', 2.0)
         self._cmd = self.create_publisher(Float64, '/nodding_cmd', 10)
         self._servo = self.create_publisher(JointState, '/servo_state', 30)

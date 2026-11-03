@@ -1,4 +1,4 @@
-"""Run Gazebo with the nodding LiDAR pipeline and create a 3D RTAB-Map database."""
+"""Gazeboで首振り2D LiDARの処理を起動し、RTAB-Mapの3D地図を作成する。"""
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription

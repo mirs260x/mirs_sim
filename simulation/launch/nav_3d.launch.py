@@ -1,4 +1,4 @@
-"""Localize against a saved 3D RTAB-Map database and start Nav2 in Gazebo."""
+"""保存済みの3D RTAB-Map地図で位置を推定し、GazeboでNav2を起動する。"""
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription

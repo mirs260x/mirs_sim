@@ -1,0 +1,31 @@
+# パッケージのルートで doxygen Doxyfile を実行する。
+PROJECT_NAME = "simulation"
+OUTPUT_DIRECTORY = docs/generated
+OUTPUT_LANGUAGE = Japanese
+INPUT_ENCODING = UTF-8
+INPUT = "launch/slam_3d_glim.launch.py" "launch/slam_3d_linefit.launch.py" "src/linefit_ground_filter.cpp" "launch/coverage_3d_linefit.launch.py" "docs/doxygen.dox" "launch/coverage_2d.launch.py" "launch/coverage_3d.launch.py" "launch/diagnose_3d.launch.py" "launch/nav_2d.launch.py" "launch/nav_3d.launch.py" "launch/simulation_launch.py" "launch/slam_2d.launch.py" "launch/slam_3d.launch.py" "scripts/home_pose_saver.py" "scripts/nodding_io.py" "scripts/pointcloud_height_filter.py" "scripts/sensor_covariance_adapter.py" "src/get_home_pose.cpp"
+FILE_PATTERNS = *.dox *.c *.cc *.cpp *.h *.hpp *.ino *.py *.java
+EXTENSION_MAPPING = ino=C++
+RECURSIVE = NO
+EXAMPLE_PATH = .
+EXAMPLE_RECURSIVE = YES
+EXTRACT_ALL = YES
+EXTRACT_STATIC = YES
+EXTRACT_PRIVATE = NO
+SOURCE_BROWSER = YES
+INLINE_SOURCES = NO
+STRIP_FROM_PATH = .
+FULL_PATH_NAMES = YES
+PYTHON_DOCSTRING = NO
+GENERATE_HTML = YES
+GENERATE_LATEX = NO
+GENERATE_XML = NO
+HAVE_DOT = NO
+QUIET = YES
+WARNINGS = YES
+WARN_IF_UNDOCUMENTED = NO
+WARN_AS_ERROR = YES
+WARN_LOGFILE = docs/generated/warnings.log
+
+# 他の資料とブラウザのメニュー設定を共有しない。
+HTML_PROJECT_COOKIE = mirs_docs_simulation_v2

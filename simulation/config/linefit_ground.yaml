@@ -1,0 +1,17 @@
+linefit_ground_filter:
+  ros__parameters:
+    # 蓄積点群のbase_link原点を基準とする。高さ[m]はlaunchで機体寸法から上書きする。
+    sensor_height: 0.242
+    r_min: 0.2                # 水平距離の下限 [m]
+    r_max: 10.0               # 水平距離の上限 [m]
+    n_bins: 80                # 距離方向の分割数
+    n_segments: 180           # 方位方向の分割数
+    n_threads: 4
+    max_dist_to_line: 0.05    # 地面線からの高さ差 [m]
+    min_slope: 0.0            # 線の傾きの絶対値（高さ差/水平距離）
+    max_slope: 0.21256        # tan(12 deg)。角度[rad]そのものではない。
+    max_fit_error: 0.05       # 線当てはめ残差の上限 [m]。内部には二乗を渡す。
+    long_threshold: 1.0      # 点間隔が大きいとする距離 [m]
+    max_long_height: 0.1     # 間隔が大きい箇所の高さ差 [m]
+    max_start_height: 0.2    # 新しい地面線を始める高さ差 [m]
+    line_search_angle: 0.1   # 隣接方位の地面線を探す角度 [rad]

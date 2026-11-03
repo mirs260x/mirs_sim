@@ -11,6 +11,38 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 
+find_package(pcl_conversions REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common visualization)
+# Eigenの設定がPCL経由で裸のコンパイル引数になる環境でも、マクロとして渡す。
+remove_definitions(EIGEN_MPL2_ONLY)
+add_compile_definitions(EIGEN_MPL2_ONLY)
+find_package(Threads REQUIRED)
+# 外部ソースは変更せず、ライブラリ部分をこのターゲットでビルドする。
+set(LINEFIT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../deps/linefit/linefit_ground_segmentation"
+  CACHE PATH "Linefit library source directory")
+if(NOT EXISTS "${LINEFIT_SOURCE_DIR}/src/ground_segmentation.cc")
+  message(FATAL_ERROR "Fetch Linefit first: cd ws && vcs import deps < linefit.repos")
+endif()
+add_library(simulation_linefit STATIC
+  ${LINEFIT_SOURCE_DIR}/src/bin.cc
+  ${LINEFIT_SOURCE_DIR}/src/segment.cc
+  ${LINEFIT_SOURCE_DIR}/src/ground_segmentation.cc
+  ${LINEFIT_SOURCE_DIR}/src/viewer.cc)
+target_include_directories(simulation_linefit SYSTEM PUBLIC
+  ${LINEFIT_SOURCE_DIR}/include ${PCL_INCLUDE_DIRS})
+target_link_libraries(simulation_linefit PUBLIC ${PCL_LIBRARIES} Threads::Threads)
+target_compile_features(simulation_linefit PUBLIC cxx_std_17)
+target_compile_options(simulation_linefit PRIVATE -O3)
+add_executable(linefit_ground_filter src/linefit_ground_filter.cpp)
+ament_target_dependencies(linefit_ground_filter
+  rclcpp sensor_msgs tf2_ros pcl_conversions)
+target_include_directories(linefit_ground_filter PRIVATE ${PCL_INCLUDE_DIRS})
+target_link_libraries(linefit_ground_filter simulation_linefit)
+target_compile_features(linefit_ground_filter PUBLIC cxx_std_17)
+install(TARGETS linefit_ground_filter DESTINATION lib/${PROJECT_NAME})
+
 add_library(simulation_get_home_pose_bt_node SHARED src/get_home_pose.cpp)
 ament_target_dependencies(simulation_get_home_pose_bt_node
   rclcpp geometry_msgs behaviortree_cpp)

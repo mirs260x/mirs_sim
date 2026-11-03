@@ -1,4 +1,4 @@
-"""Start Gazebo, the robot, ROS/Gazebo and Foxglove bridges, and sensors."""
+"""Gazebo、機体モデル、ROS・Gazebo間の接続、Foxglove接続、センサを起動する。"""
 
 import os
 
@@ -29,12 +29,12 @@ def _optional_path(context, name, default):
 
 
 def _base_link_height_above_ground(context):
-    """Match the base_link offset used by mirs.urdf.xacro."""
+    """mirs.urdf.xacroと同じbase_linkの取付位置を使う。"""
     return 2.0 * float(_value(context, 'wheel_radius')) + 0.109
 
 
 def _point_cloud_assembler(name, input_topic, output_topic, circular=False):
-    """Assemble one nodding sweep in the robot frame using odom for motion."""
+    """odomで機体の移動を考慮し、首振り一往復分の点群を機体座標系にまとめる。"""
     return Node(
         package='rtabmap_util',
         executable='point_cloud_assembler',
@@ -58,7 +58,7 @@ def _point_cloud_assembler(name, input_topic, output_topic, circular=False):
 
 def _rtabmap_actions(is_3d, localization, database_path, show_viz,
                      initial_pose=''):
-    """Run RTAB-Map against the same LiDAR and odometry used in Gazebo."""
+    """GazeboのLiDARとオドメトリを使ってRTAB-Mapを起動する。"""
     odometry_topic = '/odometry/filtered' if is_3d else '/odom'
     parameters = {
         'use_sim_time': True,
@@ -105,7 +105,7 @@ def _rtabmap_actions(is_3d, localization, database_path, show_viz,
             parameters['initial_pose'] = initial_pose
 
     remappings = [
-        ('scan_cloud', '/points_assembled_icp'),
+        ('scan_cloud', '/ground_segmentation/obstacle_points' if is_3d else '/points_assembled_icp'),
         ('scan', '/scan'),
         ('odom', odometry_topic),
         ('grid_map', '/map'),
@@ -140,6 +140,14 @@ def _launch_setup(context):
         raise RuntimeError(
             'diagnostic_stage requires 3D LiDAR and disables SLAM and Nav2')
 
+    ground_method = _value(context, 'ground_method')
+    if ground_method not in ('gseg3d', 'linefit'):
+        raise RuntimeError('ground_method must be gseg3d or linefit')
+
+    # 地図作成・位置推定では、GSeg3Dの非地面点を照合に使う。
+    use_segmented_icp = is_3d and (
+        mapping or navigation or diagnostic_stage == 'localization')
+
     def stage_at_least(name):
         return diagnostic_stage == 'full' or stages.index(diagnostic_stage) >= stages.index(name)
 
@@ -158,7 +166,12 @@ def _launch_setup(context):
 
     # Keep simulation DDS traffic isolated from the real MIRS stack. The
     # physical micro-ROS firmware uses domain 90; Gazebo uses domain 91.
-    actions = [SetEnvironmentVariable('ROS_DOMAIN_ID', '91')]
+    actions = [
+        SetEnvironmentVariable('ROS_DOMAIN_ID', '91'),
+        # GazeboのGUI・サーバー・ROSブリッジは同じホスト内で通信する。
+        # 複数のネットワークがある環境でも通信先をローカルに固定する。
+        SetEnvironmentVariable('GZ_IP', '127.0.0.1'),
+    ]
     if _enabled(context, 'enable_foxglove_bridge'):
         foxglove_share = get_package_share_directory('foxglove_bridge')
         actions.append(IncludeLaunchDescription(
@@ -229,6 +242,16 @@ def _launch_setup(context):
                     package='simulation',
                     executable='sensor_covariance_adapter',
                     parameters=[sim_time, {
+                        'wheel_lateral_velocity_variance': ParameterValue(
+                            LaunchConfiguration('wheel_lateral_velocity_variance'), value_type=float),
+                        'wheel_vertical_velocity_variance': ParameterValue(
+                            LaunchConfiguration('wheel_vertical_velocity_variance'), value_type=float),
+                        'imu_orientation_variance': ParameterValue(
+                            LaunchConfiguration('imu_orientation_variance'), value_type=float),
+                        'imu_angular_velocity_variance': ParameterValue(
+                            LaunchConfiguration('imu_angular_velocity_variance'), value_type=float),
+                        'imu_linear_acceleration_variance': ParameterValue(
+                            LaunchConfiguration('imu_linear_acceleration_variance'), value_type=float),
                         'wheel_linear_velocity_variance': ParameterValue(
                             LaunchConfiguration('wheel_linear_velocity_variance'),
                             value_type=float),
@@ -258,9 +281,8 @@ def _launch_setup(context):
                 executable='scan_to_cloud',
                 parameters=[LaunchConfiguration('cloud_config_file')],
                 output='screen'))
-        # RTAB-Map scan registration uses stable returns above the grass.
-        # Ground classification still sees the full cloud.
-        if stage_at_least('filtered'):
+        # 高さ選別と旋回制限付き蓄積は、段階別のセンサ診断で使う。
+        if stage_at_least('filtered') and not use_segmented_icp:
             actions.append(Node(
                 package='simulation',
                 executable='pointcloud_height_filter',
@@ -274,28 +296,46 @@ def _launch_setup(context):
                         _base_link_height_above_ground(context),
                 }],
                 output='screen'))
-        if stage_at_least('assembled'):
-            actions.append(_point_cloud_assembler(
-                'icp_point_cloud_assembler',
-                '/points_icp_filtered', '/points_assembled_icp'))
-        if diagnostic_stage == 'full' and _enabled(context, 'enable_ground_segmentation'):
+        if stage_at_least('assembled') and not use_segmented_icp:
+            actions.append(IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(
+                    get_package_share_directory('nodding_lidar'), 'launch',
+                    'matching_cloud_launch.py')),
+                launch_arguments={
+                    'use_sim_time': 'true',
+                    'cloud_topic': '/points_icp_filtered',
+                    'odometry_topic': '/odometry/filtered',
+                    'matching_cloud_topic': '/points_assembled_icp',
+                    'motion_cloud_config': LaunchConfiguration('motion_cloud_config'),
+                }.items()))
+        if use_segmented_icp or (
+                diagnostic_stage == 'full' and
+                _enabled(context, 'enable_ground_segmentation')):
             # GSeg3D needs the full nodding sweep to fit ground planes. The
             # circular window updates every incoming scan after the first sweep.
             actions.append(_point_cloud_assembler(
                 'ground_point_cloud_assembler',
                 '/points', '/points_assembled', circular=True))
-            actions.append(Node(
-                package='ground_segmentation_ros2',
-                executable='ground_segmentation_ros2_node',
-                name='ground_segmentation',
-                parameters=[LaunchConfiguration('ground_config_file'), {
-                    'lidar_to_ground': -_base_link_height_above_ground(context),
-                }],
-                remappings=[
-                    ('/ground_segmentation/input_pointcloud', '/points_assembled'),
-                    ('/ground_segmentation/input_imu', '/imu/data_raw'),
-                ],
-                output='screen'))
+            if ground_method == 'linefit':
+                actions.append(Node(
+                    package='simulation', executable='linefit_ground_filter',
+                    name='linefit_ground_filter',
+                    parameters=[LaunchConfiguration('linefit_config_file'), sim_time, {
+                        'sensor_height': _base_link_height_above_ground(context),
+                    }], output='screen'))
+            else:
+                actions.append(Node(
+                    package='ground_segmentation_ros2',
+                    executable='ground_segmentation_ros2_node',
+                    name='ground_segmentation',
+                    parameters=[LaunchConfiguration('ground_config_file'), {
+                        'lidar_to_ground': -_base_link_height_above_ground(context),
+                    }],
+                    remappings=[
+                        ('/ground_segmentation/input_pointcloud', '/points_assembled'),
+                        ('/ground_segmentation/input_imu', '/imu/data_raw'),
+                    ],
+                    output='screen'))
 
     localization_debug = diagnostic_stage == 'localization'
     if mapping or navigation or localization_debug:
@@ -369,13 +409,26 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'cloud_config_file',
             default_value=os.path.join(share, 'config', 'nodding_cloud.yaml')),
+        DeclareLaunchArgument('ground_method', default_value='gseg3d'),
+        DeclareLaunchArgument(
+            'linefit_config_file',
+            default_value=os.path.join(share, 'config', 'linefit_ground.yaml')),
         DeclareLaunchArgument('cloud_assembling_time', default_value='2.0'),
+        DeclareLaunchArgument(
+            'motion_cloud_config',
+            default_value=os.path.join(get_package_share_directory('nodding_lidar'),
+                                      'config', 'motion_cloud.yaml')),
         DeclareLaunchArgument(
             'icp_min_height', default_value='0.5',
             description='Minimum ICP point height above the simulated ground (m)'),
         DeclareLaunchArgument('wheel_linear_velocity_variance', default_value='0.04'),
         DeclareLaunchArgument('wheel_angular_velocity_variance', default_value='0.09'),
         DeclareLaunchArgument('imu_yaw_rate_variance', default_value='0.01'),
+        DeclareLaunchArgument('wheel_lateral_velocity_variance', default_value='0.01'),
+        DeclareLaunchArgument('wheel_vertical_velocity_variance', default_value='0.01'),
+        DeclareLaunchArgument('imu_orientation_variance', default_value='0.01'),
+        DeclareLaunchArgument('imu_angular_velocity_variance', default_value='0.01'),
+        DeclareLaunchArgument('imu_linear_acceleration_variance', default_value='0.25'),
         DeclareLaunchArgument(
             'ground_config_file',
             default_value=os.path.join(share, 'config', 'nodding_ground.yaml')),
