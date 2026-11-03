@@ -6,6 +6,9 @@ GazeboでロボットとLiDARを再現し、2D・3Dの地図作成、走行、�
 
 @section source_list ファイル一覧
 
+- dependencies.repos: apt未配布のLinefitソースを固定コミットで取得する定義。
+- config/rosdep.yaml: GLIM公式PPAのROSパッケージ名へ解決するローカル定義。
+
 - @ref launch/slam_3d_glim.launch.py "launch/slam_3d_glim.launch.py"
 - config/glim/: GLIMのCPUモジュール、仮想座標系、センサ時刻・前処理の設定。
 

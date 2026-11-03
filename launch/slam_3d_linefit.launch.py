@@ -12,7 +12,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value=''),
         DeclareLaunchArgument(
-            'database_path', default_value='/home/developer/ws/maps/forest_linefit_3d.db'),
+            'database_path', default_value='/home/developer/ws/maps/simulation/forest_linefit_3d.db'),
         DeclareLaunchArgument('linefit_config_file', default_value=PathJoinSubstitution([
             FindPackageShare('simulation'), 'config', 'linefit_ground.yaml'])),
         IncludeLaunchDescription(

@@ -20,10 +20,10 @@ remove_definitions(EIGEN_MPL2_ONLY)
 add_compile_definitions(EIGEN_MPL2_ONLY)
 find_package(Threads REQUIRED)
 # 外部ソースは変更せず、ライブラリ部分をこのターゲットでビルドする。
-set(LINEFIT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../deps/linefit/linefit_ground_segmentation"
+set(LINEFIT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../deps/linefit/linefit_ground_segmentation"
   CACHE PATH "Linefit library source directory")
 if(NOT EXISTS "${LINEFIT_SOURCE_DIR}/src/ground_segmentation.cc")
-  message(FATAL_ERROR "Fetch Linefit first: cd ws && vcs import deps < linefit.repos")
+  message(FATAL_ERROR "Fetch Linefit first: cd ws && vcs import deps < src/original/simulation/dependencies.repos")
 endif()
 add_library(simulation_linefit STATIC
   ${LINEFIT_SOURCE_DIR}/src/bin.cc

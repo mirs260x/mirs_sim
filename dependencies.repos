@@ -1,0 +1,5 @@
+repositories:
+  linefit:
+    type: git
+    url: https://github.com/baiyeweiguang/linefit_ground_segmentation_ros2.git
+    version: 5b8a5ae6a3f92cb55b091727df0606f83a9fd54f

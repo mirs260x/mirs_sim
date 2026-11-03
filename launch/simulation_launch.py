@@ -342,8 +342,10 @@ def _launch_setup(context):
         sensor_mode = '3d' if is_3d else '2d'
         database_path = os.path.expanduser(_optional_path(
             context, 'database_path',
-            os.path.join(os.path.expanduser('~'), '.ros',
+            os.path.join(os.path.expanduser('~'), 'ws', 'maps', 'simulation',
                          f'mirs_gazebo_{sensor_mode}.db')))
+        if mapping:
+            os.makedirs(os.path.dirname(database_path) or '.', exist_ok=True)
         if (navigation or localization_debug) and not os.path.isfile(database_path):
             raise RuntimeError(
                 f'RTAB-Map database not found: {database_path}. '

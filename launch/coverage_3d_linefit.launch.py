@@ -1,4 +1,4 @@
-"""Gazeboで3D地図による位置推定、Nav2、BLE入力付きの清掃範囲走行を起動する。"""
+"""Linefitの非地面点群で自己位置推定とNav2の清掃範囲走行を起動する。"""
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
@@ -8,6 +8,7 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
+    """Linefit設定・地図DB・BLE入力の設定を受け取り、清掃走行を起動する。"""
     nav2_params = PathJoinSubstitution([
         FindPackageShare('simulation'), 'config', 'nodding_nav2.yaml'])
     behavior_tree = PathJoinSubstitution([
@@ -15,12 +16,12 @@ def generate_launch_description():
         'navigate_coverage_return_home.xml'])
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value=''),
-        DeclareLaunchArgument('ground_method', default_value='gseg3d'),
+        DeclareLaunchArgument('ground_method', default_value='linefit'),
         DeclareLaunchArgument('linefit_config_file', default_value=PathJoinSubstitution([
             FindPackageShare('simulation'), 'config', 'linefit_ground.yaml'])),
         DeclareLaunchArgument(
             'database_path',
-            default_value='/home/developer/ws/maps/forest_3d.db'),
+            default_value='/home/developer/ws/maps/simulation/forest_linefit_3d.db'),
         DeclareLaunchArgument(
             'rtabmap_initial_pose', default_value='0 0 0 0 0 0'),
         DeclareLaunchArgument('nav2_params_file', default_value=nav2_params),

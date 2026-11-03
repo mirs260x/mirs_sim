@@ -58,7 +58,7 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_teleop', default_value='true'),
         DeclareLaunchArgument('cloud_assembling_time', default_value='2.0'),
         DeclareLaunchArgument('enable_glim_viewer', default_value='false'),
-        DeclareLaunchArgument('dump_path', default_value='/home/developer/ws/maps/glim_dump'),
+        DeclareLaunchArgument('dump_path', default_value='/home/developer/ws/maps/simulation/glim_dump'),
         DeclareLaunchArgument('glim_config_path', default_value=PathJoinSubstitution([
             FindPackageShare('simulation'), 'config', 'glim'])),
         SetEnvironmentVariable('ROS_DOMAIN_ID', '91'),

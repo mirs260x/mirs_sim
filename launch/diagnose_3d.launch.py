@@ -18,7 +18,7 @@ def generate_launch_description():
             description='scan, cloud, filtered, assembled, or localization'),
         DeclareLaunchArgument('world', default_value=''),
         DeclareLaunchArgument(
-            'database_path', default_value='/home/developer/ws/maps/forest_3d.db'),
+            'database_path', default_value='/home/developer/ws/maps/simulation/mirs_gazebo_3d.db'),
         DeclareLaunchArgument('cloud_assembling_time', default_value='2.0'),
         DeclareLaunchArgument('icp_min_height', default_value='0.5'),
         DeclareLaunchArgument('enable_foxglove_bridge', default_value='false'),

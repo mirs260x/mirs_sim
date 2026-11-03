@@ -12,7 +12,7 @@ Jazzy コンテナ内で `package.xml` の依存を rosdep でインストール
 cd /home/developer/ws
 mkdir -p deps
 touch deps/COLCON_IGNORE
-vcs import deps < linefit.repos
+vcs import deps < src/original/simulation/dependencies.repos
 rosdep update
 rosdep install --from-paths src --ignore-src --rosdistro jazzy -r -y
 colcon build --symlink-install --packages-up-to simulation
@@ -61,8 +61,8 @@ ros2 topic echo /tf --once
 Gazeboを動かす際に実機用 `slam_launch.py` / `bringup_launch.py` も同時起動しないでください。
 
 ナビゲーションとカバレッジを起動する前に、同じ次元の SLAM モードで地図を
-保存してください。既定のGazeboデータベースは `~/.ros/mirs_gazebo_2d.db` と
-`~/.ros/mirs_gazebo_3d.db` です。実機用データベースとは別です。
+保存してください。既定のGazeboデータベースは `~/ws/maps/simulation/mirs_gazebo_2d.db` と
+`~/ws/maps/simulation/mirs_gazebo_3d.db` です。実機用データベースとは別です。
 3D ナビゲーションでは RTAB-Map の 3D 地図で
 自己位置を推定し、Nav2 は RTAB-Map が出す 2D 占有格子 `/map` で経路を
 計画します。カバレッジも同じ自己位置推定と Nav2 を使用します。
@@ -85,7 +85,7 @@ Nav2の経路追従につなぎます。
 SLAMを終了してDBへの書き込みを終えてから、保存したDBを指定してください。
 スマホからは実機と同じ `initial_pose` と `cleaning_zone` のJSONを送信します。
 BLEを使わずトピック送信で試すときは `enable_ble:=false` を付けます。
-この3Dカバレッジ入口は既定で `/home/developer/ws/maps/forest_3d.db` を読み込みます。
+この3Dカバレッジ入口は既定で `/home/developer/ws/maps/simulation/mirs_gazebo_3d.db` を読み込みます。
 RTAB-Mapの初期位置は既定で地図座標の原点 `(0, 0, 0)`、姿勢 `(0, 0, 0)`
 として渡します。保存DBの最後の位置から再開したい場合は
 `rtabmap_initial_pose:=''` を指定します。
@@ -157,7 +157,7 @@ ros2 launch simulation diagnose_3d.launch.py stage:=scan
 `backward_stamps`、`last_point_count` を比較します。最初に異常が増えた段階が
 調査対象です。`publisher_count` が2以上なら、同じノードが残っていないか
 `ros2 topic info /scan --verbose` で発行元を確認します。`stage:=localization` では
-`database_path:=/home/developer/ws/maps/forest_3d.db` を既定で使用します。
+`database_path:=/home/developer/ws/maps/simulation/mirs_gazebo_3d.db` を既定で使用します。
 Foxgloveを使う場合は `enable_foxglove_bridge:=true` を指定します。
 別端末から確認する場合は `ROS_DOMAIN_ID=91 ros2 topic echo /diagnostics` を実行します。
 走行中の統合結果は `stage:=assembled` の状態で別端末から次を実行し、
@@ -212,7 +212,7 @@ X11 認証を確認してください。`xterm` が見つからない場合は�
 
 ```bash
 ros2 launch simulation slam_3d.launch.py \
-  world:=/home/developer/ws/src/original/simulation/simulation/worlds/terrain_course.sdf
+  world:=/home/developer/ws/src/original/simulation/worlds/terrain_course.sdf
 ```
 
 坂は 4 m で 0.4 m 上がる約 5.7 度です。角度を変える際は、坂の箱の
@@ -426,7 +426,7 @@ export ROS_DOMAIN_ID=91
 mkdir -p /home/developer/ws/logs
 set -o pipefail
 ros2 launch simulation coverage_3d.launch.py \
-  database_path:=/home/developer/ws/maps/forest_3d.db \
+  database_path:=/home/developer/ws/maps/simulation/mirs_gazebo_3d.db \
   2>&1 | tee /home/developer/ws/logs/coverage_3d_console_$(date +%Y%m%d_%H%M%S).log
 ```
 
@@ -468,7 +468,7 @@ ros2 topic echo /nodding_lidar/motion_cloud/diagnostics --once
 ## Linefitによる地面分離
 
 Linefitは方位ごとの距離・高さの断面で地面線を求めます。
-外部ライブラリは`ws/linefit.repos`のコミットに固定し、`ws/deps/linefit`へ取得します。
+外部ライブラリはパッケージ内の`dependencies.repos`のコミットに固定し、`ws/deps/linefit`へ取得します。
 `deps/COLCON_IGNORE`は通常の全体ビルドで外部ROSラッパーまで探索しないためのものです。
 公開ROSラッパーにはROS 1由来の依存が残るため、simulationのCMakeで本体ソースを静的ライブラリとしてビルドし、
 ROS 2の入出力はsimulationの`linefit_ground_filter`が担当します。外部ソースは変更しません。
@@ -479,7 +479,7 @@ Jazzyコンテナ内で次を実行します。
 cd /home/developer/ws
 mkdir -p deps
 touch deps/COLCON_IGNORE
-vcs import deps < linefit.repos
+vcs import deps < src/original/simulation/dependencies.repos
 source /opt/ros/jazzy/setup.bash
 rosdep install --from-paths src deps/linefit/linefit_ground_segmentation --ignore-src --rosdistro jazzy -r -y
 colcon build --symlink-install --packages-up-to simulation
@@ -491,7 +491,7 @@ source install/setup.bash
 
 ```bash
 ros2 launch simulation slam_3d_linefit.launch.py
-ros2 launch simulation coverage_3d_linefit.launch.py database_path:=/home/developer/ws/maps/forest_linefit_3d.db
+ros2 launch simulation coverage_3d_linefit.launch.py database_path:=/home/developer/ws/maps/simulation/forest_linefit_3d.db
 ```
 
 `ground_method`の既定値は`gseg3d`です。Linefit選択時はGSeg3Dを起動しません。
@@ -548,7 +548,7 @@ GLIMへ切り替えるだけで位置推定精度が保証されるものでは�
 起動時にapt版の既定設定を一時ディレクトリへコピーし、指定JSONを重ねます。
 apt配布ファイルは編集しません。設定は`config/glim/`にあります。
 GLIMプロセス内だけ`/usr/local/lib`を優先し、公式PPAのGTSAM 4.3とROS配布4.2の混在を防ぎます。
-`dump_path`（既定`/home/developer/ws/maps/glim_dump`）はGLIM終了時の保存先です。
+`dump_path`（既定`/home/developer/ws/maps/simulation/glim_dump`）はGLIM終了時の保存先です。
 既存の保存先との混在を避けるには実験ごとに別のパスを指定します。
 
 導入元: https://koide3.github.io/glim/installation.html
@@ -574,3 +574,27 @@ RTAB-Mapの`Reg/Force3DoF=true`は地図照合の平面制限で、EKFの3D推�
 IMUの非有限値、無効な姿勢、利用不可フラグ（共分散先頭の-1）は警告して入力全体を破棄します。
 車輪の採用速度が非有限の場合も破棄します。
 設定変更後はsimulationを再起動してください。
+
+## 地図の保存場所
+
+運用地図はパッケージの外の`ws/maps/simulation/`へ保存します。
+通常のSLAMとcoverageはともに`mirs_gazebo_3d.db`、Linefitは`forest_linefit_3d.db`を既定にします。
+別名で保存する場合は、SLAMとcoverageの両方へ同じ`database_path`を指定してください。
+SLAM起動時は指定DBを削除して作り直すため、残したいDBとは別名を指定します。
+コンテナ内パスは`/home/developer/ws/maps/simulation/`です。
+
+### 既存のJazzy環境にGLIMの依存定義を登録する
+
+DockerfileでGLIM公式PPAを設定していない環境は、公式手順でPPAを登録してから、
+このパッケージの`config/rosdep.yaml`をrosdepへ登録します。
+登録用の一覧には絶対パスを指定します。以下は本リポジトリの配置での例です。
+
+```bash
+cd /home/developer/ws
+printf 'yaml file://%s/src/original/simulation/config/rosdep.yaml\n' "$PWD" | sudo tee /etc/ros/rosdep/sources.list.d/10-mirs-glim.list
+rosdep update --rosdistro jazzy
+rosdep install --from-paths src --ignore-src --rosdistro jazzy -r -y
+```
+
+PPAの登録方法: https://koide3.github.io/glim/installation.html
+ローカル定義だけではaptの配布元は登録されません。
