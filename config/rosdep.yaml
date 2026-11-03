@@ -1,0 +1,5 @@
+# GLIM公式PPAを登録してから利用するローカルrosdep定義。
+glim_ros:
+  ubuntu:
+    noble: [ros-jazzy-glim-ros]
+    jammy: [ros-humble-glim-ros]

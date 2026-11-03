@@ -1,0 +1,27 @@
+ground_segmentation:
+  ros__parameters:
+    use_sim_time: true
+    robot_frame: base_link
+    maxX: 10.0
+    minX: -10.0
+    maxY: 10.0
+    minY: -10.0
+    maxZ: 2.0
+    minZ: -1.0
+    downsample: false
+    # GSeg3D reads this even when downsampling is disabled.
+    downsample_resolution: 0.1
+    # /points is expressed in base_link, whose origin is 0.242 m above ground
+    # with the default wheel and chassis dimensions in mirs.urdf.xacro.
+    lidar_to_ground: -0.242
+    transform_tolerance: 0.5
+    cellSizeX: 0.25
+    cellSizeY: 0.25
+    cellSizeZ: 1.0
+    cellSizeZPhase2: 0.15
+    slopeThresholdDegrees: 12.0
+    groundInlierThreshold: 0.12
+    centroidSearchRadius: 3.0
+    use_imu_orientation: true
+    maxGroundHeightDeviation: 0.18
+    show_benchmark: false

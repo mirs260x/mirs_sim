@@ -1,0 +1,56 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="CoverageAndReturnHome">
+      <GetHomePose topic="/simulation/home_pose" global_frame="map"
+                   timeout="10.0" pose="{home_pose}"/>
+      <ComputeCoveragePath nav_path="{path}" polygons="{field_polygon}"
+                           polygons_frame_id="{polygon_frame_id}"
+                           error_code_id="{compute_coverage_error_code}"/>
+      <GetPoseFromPath path="{path}" pose="{start_pose}" index="0"/>
+      <ComputePathToPose goal="{start_pose}" path="{path_to_start}"
+                         planner_id="GridBased"
+                         error_code_id="{compute_path_error_code}"/>
+      <FollowPath path="{path_to_start}" controller_id="FollowPath"
+                  error_code_id="{follow_path_error_code}"/>
+      <RecoveryNode number_of_retries="6" name="FollowCoverageRecovery">
+        <FollowPath path="{path}" controller_id="CoverageController"
+                    error_code_id="{follow_path_error_code}"/>
+        <ReactiveFallback name="CoverageRecoveryFallback">
+          <GoalUpdated/>
+          <RoundRobin name="CoverageRecoveryActions">
+            <Sequence name="ClearingActions">
+              <ClearEntireCostmap name="ClearLocalCostmap-Subtree"
+                                  service_name="local_costmap/clear_entirely_local_costmap"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Subtree"
+                                  service_name="global_costmap/clear_entirely_global_costmap"/>
+            </Sequence>
+            <Spin spin_dist="1.57"/>
+            <Wait wait_duration="5.0"/>
+            <BackUp backup_dist="0.30" backup_speed="0.15"/>
+          </RoundRobin>
+        </ReactiveFallback>
+      </RecoveryNode>
+      <ComputePathToPose goal="{home_pose}" path="{path_home}"
+                         planner_id="GridBased"
+                         error_code_id="{compute_path_error_code}"/>
+      <RecoveryNode number_of_retries="6" name="ReturnHomeRecovery">
+        <FollowPath path="{path_home}" controller_id="FollowPath"
+                    error_code_id="{follow_path_error_code}"/>
+        <ReactiveFallback name="ReturnHomeRecoveryFallback">
+          <GoalUpdated/>
+          <RoundRobin name="ReturnHomeRecoveryActions">
+            <Sequence name="ReturnHomeClearingActions">
+              <ClearEntireCostmap name="ClearLocalCostmap-Subtree"
+                                  service_name="local_costmap/clear_entirely_local_costmap"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Subtree"
+                                  service_name="global_costmap/clear_entirely_global_costmap"/>
+            </Sequence>
+            <Spin spin_dist="1.57"/>
+            <Wait wait_duration="5.0"/>
+            <BackUp backup_dist="0.30" backup_speed="0.15"/>
+          </RoundRobin>
+        </ReactiveFallback>
+      </RecoveryNode>
+    </Sequence>
+  </BehaviorTree>
+</root>

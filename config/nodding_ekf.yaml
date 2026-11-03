@@ -1,0 +1,41 @@
+ekf_filter_node_local:
+  ros__parameters:
+    use_sim_time: true
+    frequency: 30.0
+    sensor_timeout: 0.25
+    # IMUの姿勢・角速度・加速度の全3軸を使う。Nav2の経路計画はXY平面で行う。
+    two_d_mode: false
+    publish_tf: true
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_footprint
+    world_frame: odom
+
+    # Gazeboの車輪オドメトリの機体速度を使う。横・上下速度も、転がり運動の
+    # 制約を表す観測として有限の分散で入力する。位置・姿勢は重複融合しない。
+    odom0: /wheel/odometry
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true,  true,  true,
+                   false, false, true,
+                   false, false, false]
+    odom0_differential: false
+    odom0_relative: false
+
+    # Gazeboのワールド基準姿勢、機体角速度[rad/s]、加速度[m/s²]を使う。
+    # 相対姿勢へ変換せず、姿勢を用いて重力を除去してから加速度を融合する。
+    imu0: /imu/data_fusion
+    imu0_config: [false, false, false,
+                  true,  true,  true,
+                  false, false, false,
+                  true,  true,  true,
+                  true,  true,  true]
+    imu0_differential: false
+    imu0_relative: false
+    imu0_remove_gravitational_acceleration: true
+    # nodding_forest.sdfなど、このsimulationのworldの重力加速度[m/s²]。
+    gravitational_acceleration: 9.8
+
+    # 点群蓄積にもこのTFを使うため、ICPの推定位置をEKFへ戻さない。
+    print_diagnostics: true

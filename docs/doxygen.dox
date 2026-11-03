@@ -1,0 +1,121 @@
+/** @mainpage simulation
+
+GazeboでロボットとLiDARを再現し、2D・3Dの地図作成、走行、清掃経路と帰還を試す。点群の選別、センサ値の調整、帰還位置の保存も含む。
+
+各ファイルの説明からソースと宣言を参照できる。C/C++・Arduino・Python・JavaはDoxygenで解析する。Dart・Kotlin・ROS型定義・シェルはソース掲載ページを使う。コメントのない関数も一覧に含むが、その動作が説明済みという意味ではない。
+
+@section source_list ファイル一覧
+
+- docs/STACK_ISOLATION_REVIEW.md: 起動構成の競合、分離方法、検証範囲と残る制約。
+- test/test_stack_isolation.py: 機器を起動せず、実機とGazeboのlaunchを展開して分離とTF・指令経路を検証する。
+
+
+- dependencies.repos: apt未配布のLinefitソースを固定コミットで取得する定義。
+- config/rosdep.yaml: GLIM公式PPAのROSパッケージ名へ解決するローカル定義。
+
+- @ref launch/slam_3d_glim.launch.py "launch/slam_3d_glim.launch.py"
+- config/glim/: GLIMのCPUモジュール、仮想座標系、センサ時刻・前処理の設定。
+
+- @ref launch/slam_3d_linefit.launch.py "launch/slam_3d_linefit.launch.py"
+
+- @ref src/linefit_ground_filter.cpp "src/linefit_ground_filter.cpp"
+- @ref launch/coverage_3d_linefit.launch.py "launch/coverage_3d_linefit.launch.py"
+- config/linefit_ground.yaml: Linefitの距離・線当てはめ・地面判定閾値。
+
+
+- @ref launch/coverage_2d.launch.py "launch/coverage_2d.launch.py"
+
+- @ref launch/coverage_3d.launch.py "launch/coverage_3d.launch.py"
+
+- @ref launch/diagnose_3d.launch.py "launch/diagnose_3d.launch.py"
+
+- @ref launch/nav_2d.launch.py "launch/nav_2d.launch.py"
+
+- @ref launch/nav_3d.launch.py "launch/nav_3d.launch.py"
+
+- @ref launch/simulation_launch.py "launch/simulation_launch.py"
+
+- @ref launch/slam_2d.launch.py "launch/slam_2d.launch.py"
+
+- @ref launch/slam_3d.launch.py "launch/slam_3d.launch.py"
+
+- @ref scripts/home_pose_saver.py "scripts/home_pose_saver.py"
+
+- @ref scripts/nodding_io.py "scripts/nodding_io.py"
+
+- @ref scripts/pointcloud_height_filter.py "scripts/pointcloud_height_filter.py"
+
+- @ref scripts/sensor_covariance_adapter.py "scripts/sensor_covariance_adapter.py"
+
+- @ref src/get_home_pose.cpp "src/get_home_pose.cpp"
+
+*/
+
+/** @file launch/coverage_2d.launch.py
+ * @brief Gazeboで2D地図による位置推定、Nav2、BLE入力付きの清掃範囲走行を起動する。
+ */
+
+/** @file launch/coverage_3d.launch.py
+ * @brief Gazeboで3D地図による位置推定、Nav2、BLE入力付きの清掃範囲走行を起動する。
+ */
+
+/** @file launch/diagnose_3d.launch.py
+ * @brief 3Dセンサの処理を指定した段階まで起動する。Nav2と清掃範囲走行は起動しない。
+ */
+
+/** @file launch/nav_2d.launch.py
+ * @brief 保存済みの2D RTAB-Map地図で位置を推定し、GazeboでNav2を起動する。
+ */
+
+/** @file launch/nav_3d.launch.py
+ * @brief 保存済みの3D RTAB-Map地図で位置を推定し、GazeboでNav2を起動する。
+ */
+
+/** @file launch/simulation_launch.py
+ * @brief Gazeboとセンサを起動し、3D地図作成・位置推定ではGSeg3Dの非地面点群をRTAB-Mapへ接続する。
+ */
+
+/** @file launch/slam_2d.launch.py
+ * @brief Gazeboで固定LiDARの処理を起動し、RTAB-Mapの2D地図を作成する。
+ */
+
+/** @file launch/slam_3d.launch.py
+ * @brief Gazeboで首振り2D LiDARの処理を起動し、RTAB-Mapの3D地図を作成する。
+ */
+
+/** @file scripts/home_pose_saver.py
+ * @brief シミュレーションの位置推定が安定してから、機体の初期位置と向きを保存する。
+ */
+
+/** @file scripts/nodding_io.py
+ * @brief Gazeboの首振り関節を動かし、計測した関節の状態をnodding_lidarへ渡す。
+ */
+
+/** @file scripts/pointcloud_height_filter.py
+ * @brief 推定した地面から、設定した高さ以上にある点だけを取り出す。
+ */
+
+/** @file scripts/sensor_covariance_adapter.py
+ * @brief Gazeboの車輪の機体速度とIMUの姿勢・角速度・加速度に正の観測分散を付け、無効な入力を除いてEKFへ配信する。
+ */
+
+/** @file src/get_home_pose.cpp
+ * @brief 保存された帰還姿勢をBehavior Treeの走行処理へ渡す。
+ */
+
+
+
+/** @file src/linefit_ground_filter.cpp
+ * @brief base_linkの蓄積点群を重力方向へ回転してLinefitで分類し、入力の座標・時刻で地面点と非地面点を配信する。
+ */
+/** @file launch/coverage_3d_linefit.launch.py
+ * @brief Linefitの非地面点群でRTAB-Mapの自己位置推定とNav2の清掃範囲走行を起動する。
+ */
+
+/** @file launch/slam_3d_linefit.launch.py
+ * @brief Linefitの非地面点群でRTAB-Mapの3D地図を作成し、手動操作を起動する。
+ */
+
+/** @file launch/slam_3d_glim.launch.py
+ * @brief Gazeboの移動補償済み蓄積点群と機体IMUでGLIMの3D SLAMを起動する。地図・姿勢は専用座標系で配信し、終了時にdump_pathへ保存する。
+ */
