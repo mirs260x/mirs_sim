@@ -24,7 +24,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'rtabmap_initial_pose', default_value='0 0 0 0 0 0'),
         DeclareLaunchArgument('nav2_params_file', default_value=nav2_params),
-        DeclareLaunchArgument('enable_ble', default_value='true'),
+        DeclareLaunchArgument('enable_ble', default_value='false'),
         DeclareLaunchArgument('enable_monitor', default_value='true'),
         DeclareLaunchArgument('enable_rviz', default_value='true'),
         DeclareLaunchArgument('enable_rtabmap_viz', default_value='true'),

@@ -46,7 +46,7 @@ Gazebo は ROS Domain ID `91` で起動します。実機ファームウェア�
 共通launchは `GZ_IP=127.0.0.1` を設定し、GazeboのGUI・サーバー・ROSブリッジの
 通信に同じホスト内のループバックアドレスを使います。別のPCとのGazebo通信は対象外です。
 共通APIはFoxglove Bridgeも起動します。ホスト側のFoxgloveから
-`ws://localhost:8765` に接続すると、同じDomainの地図、診断、経路を表示できます。
+`ws://localhost:8766` に接続すると、同じDomainの地図、診断、経路を表示できます。
 Bridgeを別端末で重複起動する必要はありません。
 Gazeboの外から `ros2 topic` などで確認するときは、別ターミナルで次を実行します。
 
@@ -58,7 +58,9 @@ ros2 topic echo /tf --once
 
 シミュレーションと実機は、それぞれ `simulation` と
 `nodding_lidar` / `mirs` の起動コマンドで起動してください。
-Gazeboを動かす際に実機用 `slam_launch.py` / `bringup_launch.py` も同時起動しないでください。
+実機用とGazebo用のlaunchを混ぜて一台分の構成にしないでください。
+実機はDomain 90・Foxglove 8765、GazeboはDomain 91・Foxglove 8766を使います。
+起動構成のレビューと共有資源の制約は [STACK_ISOLATION_REVIEW.md](docs/STACK_ISOLATION_REVIEW.md) を参照してください。
 
 ナビゲーションとカバレッジを起動する前に、同じ次元の SLAM モードで地図を
 保存してください。既定のGazeboデータベースは `~/ws/maps/simulation/mirs_gazebo_2d.db` と
@@ -84,7 +86,8 @@ BLE receiverは`ble_server`のlaunch API経由でcoverage側が起動します�
 Nav2の経路追従につなぎます。
 SLAMを終了してDBへの書き込みを終えてから、保存したDBを指定してください。
 スマホからは実機と同じ `initial_pose` と `cleaning_zone` のJSONを送信します。
-BLEを使わずトピック送信で試すときは `enable_ble:=false` を付けます。
+BLE受信は既定で無効です。スマホから受信するときだけ `enable_ble:=true` を付けます。
+BluetoothアダプターとBlueZはROS_DOMAIN_IDでは分離されないため、実機側のBLE受信とは同時起動しないでください。
 この3Dカバレッジ入口は既定で `/home/developer/ws/maps/simulation/mirs_gazebo_3d.db` を読み込みます。
 RTAB-Mapの初期位置は既定で地図座標の原点 `(0, 0, 0)`、姿勢 `(0, 0, 0)`
 として渡します。保存DBの最後の位置から再開したい場合は
@@ -277,8 +280,8 @@ ros2 launch simulation nav_3d.launch.py database_path:=/home/developer/.ros/fiel
 | `rviz_config_file` | 2D: `rviz/mapping.rviz`、3D: `rviz/nodding.rviz` | RViz 設定 |
 | `enable_gazebo`, `enable_robot`, `enable_bridge` | `true` | シミュレーション基盤 |
 | `enable_foxglove_bridge` | `true` | Foxglove WebSocket Bridgeを起動 |
-| `foxglove_address`, `foxglove_port` | `0.0.0.0`, `8765` | Foxglove接続の待受先 |
-| `enable_ble` | coverage入口: `true` | Coverage入力用BLE受信ノード |
+| `foxglove_address`, `foxglove_port` | `0.0.0.0`, `8766` | Foxglove接続の待受先 |
+| `enable_ble` | coverage入口: `false` | Coverage入力用BLE受信ノード |
 | `enable_ground_segmentation` | `false` | 3D 点群の地面分類 |
 | `icp_min_height` | `0.5` m | 高さフィルタの段階別診断に使う最小高さ。3D地図作成・走行では使わない |
 | `wheel_linear_velocity_variance` | `0.04` | 車輪速度の融合共分散 [m²/s²] |

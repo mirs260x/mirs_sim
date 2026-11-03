@@ -57,6 +57,8 @@ install(TARGETS simulation_get_home_pose_bt_node
 # find_package(<dependency> REQUIRED)
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_stack_isolation test/test_stack_isolation.py TIMEOUT 60)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
   # comment the line when a copyright and license is added to all source files

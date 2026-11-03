@@ -6,6 +6,10 @@ GazeboでロボットとLiDARを再現し、2D・3Dの地図作成、走行、�
 
 @section source_list ファイル一覧
 
+- docs/STACK_ISOLATION_REVIEW.md: 起動構成の競合、分離方法、検証範囲と残る制約。
+- test/test_stack_isolation.py: 機器を起動せず、実機とGazeboのlaunchを展開して分離とTF・指令経路を検証する。
+
+
 - dependencies.repos: apt未配布のLinefitソースを固定コミットで取得する定義。
 - config/rosdep.yaml: GLIM公式PPAのROSパッケージ名へ解決するローカル定義。
 

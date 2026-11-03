@@ -450,7 +450,7 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_bridge', default_value='true'),
         DeclareLaunchArgument('enable_foxglove_bridge', default_value='true'),
         DeclareLaunchArgument('foxglove_address', default_value='0.0.0.0'),
-        DeclareLaunchArgument('foxglove_port', default_value='8765'),
+        DeclareLaunchArgument('foxglove_port', default_value='8766'),
         DeclareLaunchArgument('enable_nodding_lidar', default_value='false'),
         DeclareLaunchArgument('diagnostic_stage', default_value='full'),
         DeclareLaunchArgument('enable_ground_segmentation', default_value='false'),

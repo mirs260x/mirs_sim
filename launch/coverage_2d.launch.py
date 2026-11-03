@@ -17,7 +17,7 @@ def generate_launch_description():
         DeclareLaunchArgument('world', default_value=''),
         DeclareLaunchArgument('database_path', default_value=''),
         DeclareLaunchArgument('nav2_params_file', default_value=nav2_params),
-        DeclareLaunchArgument('enable_ble', default_value='true'),
+        DeclareLaunchArgument('enable_ble', default_value='false'),
         DeclareLaunchArgument('enable_monitor', default_value='true'),
         DeclareLaunchArgument('enable_rviz', default_value='true'),
         DeclareLaunchArgument('enable_rtabmap_viz', default_value='true'),
